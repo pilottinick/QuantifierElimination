@@ -45,7 +45,7 @@ notation ` v₃ `   := term.var 3
 notation ` v₄ `   := term.var 4
 notation ` v₅ `   := term.var 5
 
-notation ` ⊥ `        := formula.falsum
+notation ` F `        := formula.falsum
 infix ` ≃ `:88        := formula.eq
 prefix ` ∼ `:100      := formula.neg
 infix  ` or `:50      := formula.or
@@ -70,7 +70,7 @@ notation n \ t     := occurs_in_term _ n t
 
 /-- Def 1.5.2. If a variable is free in a formula -/
 def is_free (n : ℕ) : formula L → bool
-| ⊥                 := false
+| F                 := false
 | (t₁ ≃ t₂)         := to_bool $ (occurs_in_term L n t₁) ∨ (occurs_in_term L n t₂)
 | (rel rsymb args)  := to_bool $ ∃ i, occurs_in_term L n (args i)
 | ∼φ                := is_free φ
@@ -84,7 +84,7 @@ def replace_term_with (x : ℕ) (t : term L) : term L → term L
 
 /-- Def 1.8.2. The formula with the variable x replaced the term t -/
 def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
-| ⊥                  := falsum
+| F                  := falsum
 | (t₁ ≃ t₂)          := (replace_term_with _ x t t₁) ≃ (replace_term_with _ x t t₂)
 | (rel rsymb args)    := rel rsymb (λ n, replace_term_with _ x t (args n))
 | ∼φ                  := ∼(replace_formula_with φ)
@@ -93,7 +93,7 @@ def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 
 /-- Def 1.8.3. The term t is substitutable for the variable x in formula φ -/
 def is_substitutable_for (x : ℕ) (t : term L) : formula L → bool
-| ⊥                    := true
+| F                    := true
 | (_ ≃ _)              := true
 | (rel _ _)            := true
 | ∼φ                   := is_substitutable_for φ
@@ -145,7 +145,7 @@ def agree_on_free_variables (s₁ s₂ : var_assign A)(t : term L) : Prop := ∀
 
 /-- Def 1.7.4. A structure 𝔸 satisfies formula φ with assignment s -/
 def satisfies_with_assignment : var_assign A → formula L → Prop
-  | s ⊥                   := false
+  | s F                   := false
   | s (t₁ ≃ t₂)           := (* 𝔸 s) t₁ = (* 𝔸 s) t₂
   | s (rel rsymb args)    := 𝔸.relations rsymb (λ n, (* 𝔸 s) (args n))
   | s ∼φ₁                 := ¬(satisfies_with_assignment s φ₁)
