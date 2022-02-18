@@ -53,7 +53,13 @@ def not_not_elim : ∼∼p ▸ p := begin
     
   end
 
-def And_intro : [p, q] ▸ (p and q) := sorry
+def And_intro : [p, q] ▸ (p and q) := begin
+  let π : Prf := Not_intro
+    (Or_elim 0
+      (Not_elim 0 (Axiom 2))
+      (Not_elim 0 (Axiom 3))),
+  existsi π, simp [Proves],
+end
 
 def And_elim_left : (p and q) ▸ p := begin
     let Γ : list (formula L) := ((p and q)::[]),
@@ -67,40 +73,24 @@ def And_elim_right : (p and q) ▸ q := sorry
 
 example : F ▸ p := begin
     let π : Prf := Bot_elim 0,
-    existsi π,
-    unfold Proves,
-    begin
-      apply eq.refl ([F].nth 0),
-    end
+    existsi π, simp [Proves],
   end
 
-/-
-example : ⊢ ((p or q)::[]), (q or p) := begin
-    let π₁ : Prf := Or_intro_right,
-    let π₂ : Prf := Or_intro_left,
-    let π : Prf := Or_elim π₁ π₂,
-    existsi π,
-    unfold Proves,
-    apply and.intro,
-    begin
-      apply eq.refl p,
-    end,
-    begin
-      apply eq.refl q,
-    end
+example : (p or q) ▸ (q or p) := begin
+    let π : Prf := Or_elim 0
+      (Or_intro_right (Axiom 0))
+      (Or_intro_left (Axiom 0)),
+    existsi π, simp [Proves],
   end
 
 
-example : ⊢ ((p and q)::[]), (q and p) := begin
-    let π₃ : Prf := sorry,
-    let π₂ : Prf := sorry,
-    let π₁ : Prf := Or_elim π₃ π₂,
-    let π : Prf := Not_intro π₁,
-    existsi π,
-    unfold Proves,
-    
+example : (p and q) ▸ (q and p) := begin
+    let π : Prf := Not_intro
+      (Not_elim 1 (Or_elim 0
+        (Or_intro_right (Axiom 0))
+        (Or_intro_left (Axiom 0)))),
+    existsi π, simp [Proves],
   end
--/
 
 end prf
 
