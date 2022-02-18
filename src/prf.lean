@@ -73,14 +73,13 @@ def And_intro : [p, q] ▸ (p and q) := begin
 end
 
 def And_elim_left : (p and q) ▸ p := begin
-    have Γ := (p and q)::[],
-    /- ∼p::Γ ▸ ∼p or ∼q -/
-    let π₁ : Prf := Or_intro_left
-      (Axiom 0) (∼p::Γ) (∼p or ∼q)
+    let π : Prf := 
+      By_contradiction 
+        (Not_elim 1 
+        (Or_intro_left (Axiom 0))),
     
-    let π : Prf := By_contradiction
-      () (p and q)::[] p,
     existsi π,
+    unfold Proves, simp [Proves],
   end
 
 def And_elim_right : (p and q) ▸ q := sorry
