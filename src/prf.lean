@@ -51,20 +51,47 @@ notation ` ▸ `φ := proves _ list.nil φ
 
 variables p q r : formula L
 
-variable Γ : list (formula L)
+variables Γ γ : list (formula L)
 
-def impl_proves : (▸ (p ⇒ q)) → (p ▸ q) := sorry
-
-def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
+def redundency : (γ ▸ p) → ((γ.append Γ) ▸ p) := sorry
 
 def bot_elim : F ▸ p := begin
     let π : Prf := Bot_elim 0,
     existsi π,
     unfold Proves,
     begin
-      apply eq.refl ([F].nth 0),
+      refl
     end
   end
+
+def And_intro : [p, q] ▸ (p and q) := begin
+  let π : Prf := Not_intro
+    (Or_elim 0
+      (Not_elim 0 (Axiom 2))
+      (Not_elim 0 (Axiom 3))),
+  existsi π, simp [Proves],
+end
+
+def And_elim_left : (p and q) ▸ p := begin
+    have Γ := (p and q)::[],
+    /- ∼p::Γ ▸ ∼p or ∼q -/
+    let π₁ : Prf := Or_intro_left
+      (Axiom 0) (∼p::Γ) (∼p or ∼q)
+    
+    let π : Prf := By_contradiction
+      () (p and q)::[] p,
+    existsi π,
+  end
+
+def And_elim_right : (p and q) ▸ q := sorry
+
+def impl_proves : (▸ (p ⇒ q)) → (p ▸ q) := sorry
+
+def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
+
+def Impl_elim : (p and (p ⇒ q)) ▸ q := sorry
+
+
 
 def not_elim : (Γ ▸ (p and ∼p)) → (Γ ▸ q) := sorry
 
@@ -78,25 +105,9 @@ def or_intro_right : (Γ ▸ q) → (Γ ▸ (p or q)) := sorry
 
 def or_elim : (Γ ▸ (p or q)) → (Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r)) → (Γ ▸ r) := sorry
 
-def excluded_middle : [] ▸ (p or ∼p) := sorry
+def and_intro : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := sorry
 
-def And_intro : [p, q] ▸ (p and q) := begin
-  let π : Prf := Not_intro
-    (Or_elim 0
-      (Not_elim 0 (Axiom 2))
-      (Not_elim 0 (Axiom 3))),
-  existsi π, simp [Proves],
-end
-
-def And_elim_left : (p and q) ▸ p := begin
-    let Γ : list (formula L) := ((p and q)::[]),
-    let π₁ : Prf := sorry,
-    let π : Prf := Not_intro π₁,
-    existsi π,
-    admit
-  end
-
-def And_elim_right : (p and q) ▸ q := sorry
+def excluded_middle : ▸ (p or ∼p) := sorry
 
 /-
 example : ⊢ ((p or q)::[]), (q or p) := begin
@@ -132,6 +143,7 @@ example : (p and q) ▸ (q and p) := begin
         (Or_intro_left (Axiom 0)))),
     existsi π, simp [Proves],
   end
+-/
 
 end prf
 
