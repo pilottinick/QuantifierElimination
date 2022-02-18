@@ -47,6 +47,12 @@ notation φ` ▸ `ψ := vdash_prop _ φ ψ
 
 variables p q r : formula L
 
+def not_not_elim : ∼∼p ▸ p := begin
+    let π : Prf := sorry,
+    existsi π,
+    
+  end
+
 def And_intro : [p, q] ▸ (p and q) := sorry
 
 def And_elim_left : (p and q) ▸ p := begin
