@@ -34,19 +34,41 @@ def Proves : Prf → list (formula L) → formula L → Prop
                           
 | _ _ _ := false
 
-#check Proves
+def vdash (Γ : list (formula L)) (φ : formula L) : Prop := 
+  ∃ π : Prf, Proves _ π Γ φ
 
-notation ⊢ Φ, φ  := ∃ π : Prf, Proves _ π Φ φ
+def vdash_prop (φ : formula L) (ψ : formula L) : Prop :=
+  vdash _ (φ::[]) ψ 
+
+/- Using ⊢ doesn't compile -/
+infix ` ▸ ` := vdash _
+
+notation φ` ▸ `ψ := vdash_prop _ φ ψ
 
 variables p q r : formula L
 
-example : ⊢ (F::[]), p:= begin
-    let π : Prf := Bot_elim 0,
+def And_intro : [p, q] ▸ (p and q) := sorry
+
+def And_elim_left : (p and q) ▸ p := begin
+    let Γ : list (formula L) := ((p and q)::[]),
+    let π₁ : Prf := sorry,
+    let π : Prf := Not_intro π₁,
     existsi π,
-    unfold Proves,
     
   end
 
+def And_elim_right : (p and q) ▸ q := sorry
+
+example : F ▸ p := begin
+    let π : Prf := Bot_elim 0,
+    existsi π,
+    unfold Proves,
+    begin
+      apply eq.refl ([F].nth 0),
+    end
+  end
+
+/-
 example : ⊢ ((p or q)::[]), (q or p) := begin
     let π₁ : Prf := Or_intro_right,
     let π₂ : Prf := Or_intro_left,
@@ -62,6 +84,7 @@ example : ⊢ ((p or q)::[]), (q or p) := begin
     end
   end
 
+
 example : ⊢ ((p and q)::[]), (q and p) := begin
     let π₃ : Prf := sorry,
     let π₂ : Prf := sorry,
@@ -71,6 +94,7 @@ example : ⊢ ((p and q)::[]), (q and p) := begin
     unfold Proves,
     
   end
+-/
 
 end prf
 
