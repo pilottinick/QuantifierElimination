@@ -11,7 +11,7 @@ inductive Prf
 | Bot_elim : nat → Prf
 | Not_elim : nat → Prf → Prf
 | Not_intro : Prf → Prf
-| Not_not_elim : nat → Prf
+| By_contradiction : Prf → Prf
 | Or_intro_left : Prf → Prf 
 | Or_intro_right : Prf → Prf
 | Or_elim : nat → Prf → Prf → Prf
@@ -26,10 +26,7 @@ def Proves : Prf → list (formula L) → formula L → Prop
                         | _        := false
                         end
 | (Not_intro π) Γ (∼φ) := Proves π (φ::Γ) F
-| (Not_not_elim n) Γ φ := match Γ.nth n with
-                          | some ∼∼φ  := true
-                          | _          := false
-                          end
+| (By_contradiction π) Γ φ := Proves π (∼φ::Γ) F
 | (Or_intro_left π) Γ (φ or ψ) := Proves π Γ φ
 | (Or_intro_right π) Γ (φ or ψ) := Proves π Γ ψ
 | (Or_elim n π₁ π₂) Γ χ := match Γ.nth n with
@@ -83,7 +80,13 @@ def or_elim : (Γ ▸ (p or q)) → (Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r)) �
 
 def excluded_middle : [] ▸ (p or ∼p) := sorry
 
-def And_intro : [p, q] ▸ (p and q) := sorry
+def And_intro : [p, q] ▸ (p and q) := begin
+  let π : Prf := Not_intro
+    (Or_elim 0
+      (Not_elim 0 (Axiom 2))
+      (Not_elim 0 (Axiom 3))),
+  existsi π, simp [Proves],
+end
 
 def And_elim_left : (p and q) ▸ p := begin
     let Γ : list (formula L) := ((p and q)::[]),
@@ -109,19 +112,26 @@ example : ⊢ ((p or q)::[]), (q or p) := begin
     begin
       apply eq.refl q,
     end
+example : F ▸ p := begin
+    let π : Prf := Bot_elim 0,
+    existsi π, simp [Proves],
+  end
+
+example : (p or q) ▸ (q or p) := begin
+    let π : Prf := Or_elim 0
+      (Or_intro_right (Axiom 0))
+      (Or_intro_left (Axiom 0)),
+    existsi π, simp [Proves],
   end
 
 
-example : ⊢ ((p and q)::[]), (q and p) := begin
-    let π₃ : Prf := sorry,
-    let π₂ : Prf := sorry,
-    let π₁ : Prf := Or_elim π₃ π₂,
-    let π : Prf := Not_intro π₁,
-    existsi π,
-    unfold Proves,
-    
+example : (p and q) ▸ (q and p) := begin
+    let π : Prf := Not_intro
+      (Not_elim 1 (Or_elim 0
+        (Or_intro_right (Axiom 0))
+        (Or_intro_left (Axiom 0)))),
+    existsi π, simp [Proves],
   end
--/
 
 end prf
 
