@@ -11,6 +11,7 @@ inductive Prf
 | Bot_elim : nat → Prf
 | Not_elim : nat → Prf → Prf
 | Not_intro : Prf → Prf
+| Not_not_elim : nat → Prf
 | Or_intro_left : Prf → Prf 
 | Or_intro_right : Prf → Prf
 | Or_elim : nat → Prf → Prf → Prf
@@ -25,6 +26,10 @@ def Proves : Prf → list (formula L) → formula L → Prop
                         | _        := false
                         end
 | (Not_intro π) Γ (∼φ) := Proves π (φ::Γ) F
+| (Not_not_elim n) Γ φ := match Γ.nth n with
+                          | some ∼∼φ  := true
+                          | _          := false
+                          end
 | (Or_intro_left π) Γ (φ or ψ) := Proves π Γ φ
 | (Or_intro_right π) Γ (φ or ψ) := Proves π Γ ψ
 | (Or_elim n π₁ π₂) Γ χ := match Γ.nth n with
@@ -34,24 +39,49 @@ def Proves : Prf → list (formula L) → formula L → Prop
                           
 | _ _ _ := false
 
-def vdash (Γ : list (formula L)) (φ : formula L) : Prop := 
+def proves (Γ : list (formula L)) (φ : formula L) : Prop := 
   ∃ π : Prf, Proves _ π Γ φ
 
-def vdash_prop (φ : formula L) (ψ : formula L) : Prop :=
-  vdash _ (φ::[]) ψ 
+def proves_prop (φ : formula L) (ψ : formula L) : Prop :=
+  proves _ (φ::[]) ψ 
 
 /- Using ⊢ doesn't compile -/
-infix ` ▸ ` := vdash _
+infix ` ▸ ` := proves _
 
-notation φ` ▸ `ψ := vdash_prop _ φ ψ
+notation φ` ▸ `ψ := proves_prop _ φ ψ
+
+notation ` ▸ `φ := proves _ list.nil φ
 
 variables p q r : formula L
 
-def not_not_elim : ∼∼p ▸ p := begin
-    let π : Prf := sorry,
+variable Γ : list (formula L)
+
+def impl_proves : (▸ (p ⇒ q)) → (p ▸ q) := sorry
+
+def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
+
+def bot_elim : F ▸ p := begin
+    let π : Prf := Bot_elim 0,
     existsi π,
-    
+    unfold Proves,
+    begin
+      apply eq.refl ([F].nth 0),
+    end
   end
+
+def not_elim : (Γ ▸ (p and ∼p)) → (Γ ▸ q) := sorry
+
+def not_intro : (Γ ▸ (p ⇒ F)) → (Γ ▸ ∼p) := sorry
+
+def not_not_elim : (Γ ▸ ∼∼p) → (Γ ▸ p) := sorry
+
+def or_intro_left : (Γ ▸ p) → (Γ ▸ (p or q)) := sorry
+
+def or_intro_right : (Γ ▸ q) → (Γ ▸ (p or q)) := sorry
+
+def or_elim : (Γ ▸ (p or q)) → (Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r)) → (Γ ▸ r) := sorry
+
+def excluded_middle : [] ▸ (p or ∼p) := sorry
 
 def And_intro : [p, q] ▸ (p and q) := sorry
 
@@ -60,19 +90,10 @@ def And_elim_left : (p and q) ▸ p := begin
     let π₁ : Prf := sorry,
     let π : Prf := Not_intro π₁,
     existsi π,
-    
+    admit
   end
 
 def And_elim_right : (p and q) ▸ q := sorry
-
-example : F ▸ p := begin
-    let π : Prf := Bot_elim 0,
-    existsi π,
-    unfold Proves,
-    begin
-      apply eq.refl ([F].nth 0),
-    end
-  end
 
 /-
 example : ⊢ ((p or q)::[]), (q or p) := begin
