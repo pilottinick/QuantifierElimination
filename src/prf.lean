@@ -6,18 +6,21 @@ section prf
 
 variable L : language
 
-inductive Prf
-| Axiom : nat → Prf
-| Bot_elim : nat → Prf
-| Not_elim : nat → Prf → Prf
+inductive Prf : list (formula L) → formula L → Prop
+| Axiom : forall {Γ : list (formula L)} n φ, Γ.nth n = some φ → Prf Γ φ
+| Bot_elim : forall {Γ : list _} n φ, Γ.nth n = some F → Prf Γ φ
+| Not_elim : forall {Γ : list _} n (φ ψ : formula _), Γ.nth n = some (formula.neg φ) → Prf Γ φ → Prf Γ ψ
+| Or_elim : forall {Γ : list _} n φ ψ χ, Γ.nth n = some (φ or ψ)
+  → Prf (φ :: Γ) χ → Prf (ψ :: Γ) χ → Prf Γ χ
+
+/-
 | Not_intro : Prf → Prf
 | By_contradiction : Prf → Prf
 | Or_intro_left : Prf → Prf 
 | Or_intro_right : Prf → Prf
-| Or_elim : nat → Prf → Prf → Prf
-
+-/
 open Prf
-
+/-
 def Proves : Prf → list (formula L) → formula L → Prop
 | (Axiom n) Γ φ := Γ.nth n = (some φ)
 | (Bot_elim n) Γ _ := (Γ.nth n) = (some F)
@@ -41,22 +44,31 @@ def proves (Γ : list (formula L)) (φ : formula L) : Prop :=
 
 def proves_prop (φ : formula L) (ψ : formula L) : Prop :=
   proves _ (φ::[]) ψ 
+-/
 
 /- Using ⊢ doesn't compile -/
-infix ` ▸ ` := proves _
+infix ` ▸ ` := Prf _
 
-notation φ` ▸ `ψ := proves_prop _ φ ψ
-
-notation ` ▸ `φ := proves _ list.nil φ
+notation ` ▸ `φ := Prf _ list.nil φ
 
 variables p q r : formula L
 
 variables Γ γ : list (formula L)
 
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
-    let π : Prf := Or_elim 1 (Not_elim 0 (Axiom 1)) (Axiom 0),
-    existsi π,
-    unfold Proves, simp [Proves],
+    apply (Or_elim 1),
+    begin
+      refl,
+    end,
+    begin
+      simp,
+      apply (Not_elim 0),
+        refl,
+        apply (Axiom 1), refl,
+    end,
+    begin
+      apply (Axiom 0), refl,
+    end
   end
 
 def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
