@@ -14,6 +14,7 @@ inductive Prf : list (formula L) → formula L → Prop
 | Or_intro_left : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
+| Cut_rule : ∀ {Γ} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
 
@@ -36,12 +37,7 @@ example : p ▸ (p or q) := begin
 -- Need help
 def redundency : (γ ▸ p) → ((γ.append Γ) ▸ p) := begin
     admit
-    -- intro π,
-    -- cases π,
-    -- apply (Axiom π_n), admit,
   end
-
-def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := sorry
 
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Or_elim,
@@ -51,6 +47,8 @@ def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Axiom 0, refl,
     apply Axiom 0, refl,
   end
+
+def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := sorry
 
 def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
 
