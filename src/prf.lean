@@ -29,15 +29,8 @@ variables p q r : formula L
 
 variables Γ γ : list (formula L)
 
-example : p ▸ (p or q) := begin
-    apply Or_intro_left,
-    apply Axiom 0, refl,
-  end
-
--- Need help
-def redundency : (γ ▸ p) → ((γ.append Γ) ▸ p) := begin
-    admit
-  end
+-- TODO
+def redundency : (p ▸ q) → ((p::Γ) ▸ q) := sorry
 
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Or_elim,
@@ -49,8 +42,6 @@ def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
   end
 
 def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := sorry
-
-def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
 
 def Bot_elim_ : F ▸ p := begin
     apply Bot_elim, apply Axiom 0, refl,
@@ -72,8 +63,6 @@ def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
 
 def Not_intro : (p::Γ) ▸ F → Γ ▸ ∼p := sorry
 
-def Double_negation_elim : Γ ▸ ∼∼p → Γ ▸ p := sorry
-
 def Double_negation_elim_ : ∼∼p ▸ p := begin
     apply (By_contradiction p),
     apply Not_elim,
@@ -81,7 +70,7 @@ def Double_negation_elim_ : ∼∼p ▸ p := begin
     apply Axiom 1, refl,
   end
 
-def Double_negation_intro : Γ ▸ p → Γ ▸ ∼∼p := sorry
+def Double_negation_elim : Γ ▸ ∼∼p → Γ ▸ p := sorry
 
 def Double_negation_intro_ : p ▸ ∼∼p := begin
     apply Not_intro,
@@ -90,8 +79,9 @@ def Double_negation_intro_ : p ▸ ∼∼p := begin
     apply Axiom 0, refl,
   end
 
--- Need help
-def By_contradiction_ : (∼∼p or F) ▸ p := begin
+def Double_negation_intro : Γ ▸ p → Γ ▸ ∼∼p := sorry
+
+def By_contradiction_ : (∼p ⇒ F) ▸ p := begin
     apply Or_elim,
     apply Axiom 0, refl,
     apply Double_negation_elim,
@@ -110,7 +100,7 @@ def Or_intro_right_ : q ▸ (p or q) := begin
     apply Axiom 0, refl,
   end
 
-def Or_elim_ : [p or q, ∼p or r, ∼q or r] ▸ r := begin
+def Or_elim_ : [p or q, p ⇒ r, q ⇒ r] ▸ r := begin
     apply Or_elim, 
     apply Axiom 0, refl,
     apply Impl_elim,
@@ -133,6 +123,8 @@ def And_intro_ : [p, q] ▸ (p and q) := begin
     apply Axiom 0, refl,
   end
 
+def And_intro : Γ ▸ p → Γ ▸ q → Γ ▸ (p and q) := sorry
+
 def And_elim_left_ : (p and q) ▸ p := begin
       apply By_contradiction,
       apply Not_elim,
@@ -141,6 +133,8 @@ def And_elim_left_ : (p and q) ▸ p := begin
       apply Or_intro_left,
       apply Axiom 0, refl,
     end
+
+def And_elim_left : Γ ▸ (p and q) → Γ ▸ p := sorry
 
 def And_elim_right_ : (p and q) ▸ q := begin
       apply By_contradiction,
@@ -151,27 +145,90 @@ def And_elim_right_ : (p and q) ▸ q := begin
       apply Axiom 0, refl,
     end
 
-def excluded_middle : (p and ∼p) ▸ F := begin
+def And_elim_right : Γ ▸ (p and q) → Γ ▸ q := sorry
+
+def DeMorganNotOr_ : ∼(p or q) ▸ (∼p and ∼q) := begin
+    apply Not_intro,
+    apply Not_elim,
+    apply Axiom 1, refl,
+    apply Double_negation_intro,
+    apply Or_elim,
+    apply Axiom 0, refl,
+    apply Or_intro_left,
+    apply Double_negation_elim,
+    apply Axiom 0, refl,
+    apply Or_intro_right,
+    apply Double_negation_elim,
+    apply Axiom 0, refl,
+  end
+
+def DeMorganNotOr : Γ ▸ ∼(p or q) → Γ ▸ (∼p and ∼q) := sorry
+
+def DeMorganOr_ : (∼p or ∼q) ▸ ∼(p and q) := begin
+    apply Not_intro,
+    apply Or_elim,
+    apply Axiom 1, refl,
+    apply Not_elim,
+    apply Axiom 0, refl,
+    apply Double_negation_intro,
+    apply And_elim_left,
+    apply Axiom 1, refl,
+    apply Not_elim,
+    apply Axiom 0, refl,
+    apply Double_negation_intro,
+    apply And_elim_right,
+    apply Axiom 1, refl,
+  end
+
+def DeMorganOr : Γ ▸ (∼p or ∼q) → Γ ▸ ∼(p and q) := sorry
+
+def DeMorganNotAnd_ : ∼(p and q) ▸ (∼p or ∼q) := begin
+    apply By_contradiction,
+    apply Not_elim,
+    apply Axiom 1, refl,
+    apply Double_negation_intro,
+    apply Axiom 0, refl,
+  end
+
+def DeMorganNotAnd : Γ ▸ ∼(p and q) → Γ ▸ (∼p or ∼q) := sorry
+
+-- TODO
+def DeMorganAnd_ : (∼p and ∼q) ▸ ∼(p or q) := sorry
+
+def DeMorganAnd : Γ ▸ (∼p and ∼q) → Γ ▸ ∼(p or q) := sorry
+
+def NonContradiction_ : (p and ∼p) ▸ F := begin
     apply Not_elim,
     apply And_elim_left_,
     apply And_elim_right_,
   end
 
-def impl_elim : (p ▸ q) → (q ▸ r) → (p ▸ r) := sorry
+def NonContradiction : Γ ▸ (p and ∼p) → Γ ▸ F := sorry
 
-def not_elim : (Γ ▸ (p and ∼p)) → (Γ ▸ q) := sorry
+def ExcludedMiddle_ : ▸ (p or ∼p) := sorry
 
-def not_intro : (Γ ▸ (p ⇒ F)) → (Γ ▸ ∼p) := sorry
+def ExcludedMiddle : Γ ▸ (p or ∼p) := sorry
 
-def not_not_elim : (Γ ▸ ∼∼p) → (Γ ▸ p) := sorry
+def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
+    intro h,
+    apply And_intro,
+    apply and.elim_left h,
+    apply and.elim_right h,
+  end
 
-def or_intro_left : (Γ ▸ p) → (Γ ▸ (p or q)) := sorry
+def NotProves : ¬(Γ ▸ p) → (Γ ▸ ∼p) := sorry
 
-def or_intro_right : (Γ ▸ q) → (Γ ▸ (p or q)) := sorry
+def Prove_impl_ : (p ▸ q) → (▸ p ⇒ q) := sorry
 
-def or_elim : (Γ ▸ (p or q)) → (Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r)) → (Γ ▸ r) := sorry
+def prove_transitive : p ▸ q → q ▸ r → p ▸ r := sorry
 
-def and_intro : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := sorry
+def DistributionAndOr_ : (p and (q or r)) ▸ ((p and q) or (p and r)) := sorry
+
+def DistributionAndOr : Γ ▸ (p and (q or r)) → Γ ▸ ((p and q) or (p and r)):= sorry
+
+def DistributionOrAnd_ : (p or (q and r)) ▸ ((p or q) and (p or r)) := sorry
+
+def DistributionOrAnd : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or r)) := sorry
 
 end prf
 
