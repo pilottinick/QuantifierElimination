@@ -4,7 +4,7 @@ namespace first_order
 
 section prf
 
-variables (L : language)
+variables {L : language}
 
 inductive Prf : list (formula L) → formula L → Prop
 | Axiom : ∀ {Γ : list _} n φ, Γ.nth n = some φ → Prf Γ φ
@@ -14,23 +14,65 @@ inductive Prf : list (formula L) → formula L → Prop
 | Or_intro_left : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| Cut_rule : ∀ {Γ} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
+| Cut : ∀ {Γ} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
 
 /- Using ⊢ doesn't compile -/
-infix ` ▸ ` := Prf _
+infix ` ▸ ` := Prf
 
-notation φ` ▸ `ψ := Prf _ (φ::[]) ψ
+notation φ` ▸ `ψ := Prf (φ::[]) ψ
 
-notation ` ▸ `φ := Prf _ list.nil φ
+notation ` ▸ `φ := Prf list.nil φ
 
-variables p q r : formula L
+variables {p q r : formula L}
 
-variables Γ γ : list (formula L)
+variables {Γ γ : list (formula L)}
 
--- TODO
-def redundency : (p ▸ q) → ((p::Γ) ▸ q) := sorry
+example : p ▸ (p or q) := begin
+    apply Or_intro_left,
+    apply Axiom 0, refl,
+  end
+
+lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
+| A (y :: l1) l2 0 x h := h
+| A (y :: l1) l2 (n+1) x h := @nth_append_some A l1 l2 n x h
+
+lemma nth_cons_some : ∀ {A : Type} {l1 l2 : list A},
+  (∀ n x, l1.nth n = some x → ∃ m, l2.nth m = some x) -> ∀ y,
+  (∀ n x, (y :: l1).nth n = some x → ∃ m, (y :: l2).nth m = some x) :=
+  begin
+    intros, cases n, { existsi 0, assumption },
+    { simp at *, cases (ᾰ _ _ ᾰ_1),
+        existsi w.succ, assumption },
+  end
+
+def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
+  γ ▸ p → Γ ▸ p := begin
+    intros h γp, revert Γ h,
+    induction γp, all_goals { intros Γ h },
+      { cases (h _ _ γp_ᾰ), apply Axiom, assumption, },
+      apply Bot_elim, apply γp_ih, assumption,
+      apply Not_elim,
+        { apply γp_ih_ᾰ, assumption },
+        { apply γp_ih_ᾰ_1, assumption },
+      apply By_contradiction, apply γp_ih, apply nth_cons_some, assumption,
+      apply Or_intro_left, apply γp_ih, assumption,
+      apply Or_intro_right, apply γp_ih, assumption,
+      apply Or_elim,
+        { apply γp_ih_ᾰ, assumption },
+        { apply γp_ih_ᾰ_1, apply nth_cons_some, assumption },
+        { apply γp_ih_ᾰ_2, apply nth_cons_some, assumption },
+      apply Cut,
+        { apply γp_ih_ᾰ, assumption },
+        { apply γp_ih_ᾰ_1, apply nth_cons_some, assumption },
+  end
+
+def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
+    apply weakening,
+    intros, existsi n,
+    apply nth_append_some, assumption,
+  end
 
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Or_elim,
@@ -41,7 +83,21 @@ def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Axiom 0, refl,
   end
 
-def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := sorry
+def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := begin
+    assume H1 H2,
+    apply Cut,
+      apply H1,
+      apply Cut,
+        apply (weakening _ H2),
+          { intros, existsi n.succ, assumption },
+          { simp, apply weakening _ (@Impl_elim_ _ p q),
+              { intros n _ _, cases n,
+                  { existsi 1, assumption },
+                  { cases n,
+                      { existsi 0, assumption },
+                      { contradiction }, }
+               } }
+  end
 
 def Bot_elim_ : F ▸ p := begin
     apply Bot_elim, apply Axiom 0, refl,
