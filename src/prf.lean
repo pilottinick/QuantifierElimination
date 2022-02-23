@@ -4,50 +4,23 @@ namespace first_order
 
 section prf
 
-variable L : language
+variables (L : language)
 
 inductive Prf : list (formula L) → formula L → Prop
-| Axiom : forall {Γ : list (formula L)} n φ, Γ.nth n = some φ → Prf Γ φ
-| Bot_elim : forall {Γ : list _} n φ, Γ.nth n = some F → Prf Γ φ
-| Not_elim : forall {Γ : list _} n (φ ψ : formula _), Γ.nth n = some (formula.neg φ) → Prf Γ φ → Prf Γ ψ
-| Or_elim : forall {Γ : list _} n φ ψ χ, Γ.nth n = some (φ or ψ)
-  → Prf (φ :: Γ) χ → Prf (ψ :: Γ) χ → Prf Γ χ
+| Axiom : ∀ {Γ : list _} n φ, Γ.nth n = some φ → Prf Γ φ
+| Bot_elim : ∀ {Γ} φ, Prf Γ F → Prf Γ φ
+| Not_elim : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ ∼φ → Prf Γ ψ
+| By_contradiction : ∀ {Γ} φ, Prf (∼φ::Γ) F → Prf Γ φ
+| Or_intro_left : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
+| Or_intro_right : ∀ {Γ} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
+| Or_elim : ∀ {Γ} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
 
-/-
-| Not_intro : Prf → Prf
-| By_contradiction : Prf → Prf
-| Or_intro_left : Prf → Prf 
-| Or_intro_right : Prf → Prf
--/
 open Prf
-/-
-def Proves : Prf → list (formula L) → formula L → Prop
-| (Axiom n) Γ φ := Γ.nth n = (some φ)
-| (Bot_elim n) Γ _ := (Γ.nth n) = (some F)
-| (Not_elim n π) Γ _ := match Γ.nth n with
-                        | some ∼φ  := Proves π Γ φ
-                        | _        := false
-                        end
-| (Not_intro π) Γ ∼φ := Proves π (φ::Γ) F
-| (By_contradiction π) Γ φ := Proves π (∼φ::Γ) F
-| (Or_intro_left π) Γ (φ or ψ) := Proves π Γ φ
-| (Or_intro_right π) Γ (φ or ψ) := Proves π Γ ψ
-| (Or_elim n π₁ π₂) Γ χ := match Γ.nth n with
-                           | some (φ or ψ) := (Proves π₁ (φ::Γ) χ) ∧ (Proves π₂ (ψ::Γ) χ)
-                           | _             := false
-                           end
-                          
-| _ _ _ := false
-
-def proves (Γ : list (formula L)) (φ : formula L) : Prop := 
-  ∃ π : Prf, Proves _ π Γ φ
-
-def proves_prop (φ : formula L) (ψ : formula L) : Prop :=
-  proves _ (φ::[]) ψ 
--/
 
 /- Using ⊢ doesn't compile -/
 infix ` ▸ ` := Prf _
+
+notation φ` ▸ `ψ := Prf _ (φ::[]) ψ
 
 notation ` ▸ `φ := Prf _ list.nil φ
 
@@ -55,88 +28,136 @@ variables p q r : formula L
 
 variables Γ γ : list (formula L)
 
+example : p ▸ (p or q) := begin
+    apply Or_intro_left,
+    apply Axiom 0, refl,
+  end
+
+-- Need help
+def redundency : (γ ▸ p) → ((γ.append Γ) ▸ p) := begin
+    admit
+    -- intro π,
+    -- cases π,
+    -- apply (Axiom π_n), admit,
+  end
+
+def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := sorry
+
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
-    apply (Or_elim 1),
-    begin
-      refl,
-    end,
-    begin
-      simp,
-      apply (Not_elim 0),
-        refl,
-        apply (Axiom 1), refl,
-    end,
-    begin
-      apply (Axiom 0), refl,
-    end
+    apply Or_elim,
+    apply Axiom 1, refl,
+    apply Not_elim,
+    apply Axiom 1, refl,
+    apply Axiom 0, refl,
+    apply Axiom 0, refl,
   end
 
 def proves_impl : (p ▸ q) → (▸ (p ⇒ q)) := sorry
 
 def Bot_elim_ : F ▸ p := begin
-    let π : Prf := Bot_elim 0,
-    existsi π,
-    unfold Proves, simp,
+    apply Bot_elim, apply Axiom 0, refl,
   end
 
 def Not_elim_ : [p, ∼p] ▸ q := begin
-    let π : Prf := Not_elim 1 (Axiom 0),
-    existsi π, simp [Proves], 
+    apply Not_elim, 
+    apply Axiom 0, refl,
+    apply Axiom 1, refl,
   end
 
 def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
-    let π : Prf := Or_elim 0 (Axiom 0) (Bot_elim 0),
-    existsi π, simp [Proves],
+    apply Or_elim, 
+    apply Axiom 0, refl,
+    apply Axiom 0, refl,
+    apply Bot_elim, 
+    apply Axiom 0, refl,
   end
 
-def double_negation_elim : ∼∼p ▸ p := begin
-    let π := By_contradiction (Not_elim 1 (Axiom 0)),
-    existsi π, simp [Proves],
+def Not_intro : (p::Γ) ▸ F → Γ ▸ ∼p := sorry
+
+def Double_negation_elim : Γ ▸ ∼∼p → Γ ▸ p := sorry
+
+def Double_negation_elim_ : ∼∼p ▸ p := begin
+    apply (By_contradiction p),
+    apply Not_elim,
+    apply Axiom 0, refl,
+    apply Axiom 1, refl,
   end
 
-def By_contradiction_ : (∼p ⇒ F) ▸ p := sorry
+def Double_negation_intro : Γ ▸ p → Γ ▸ ∼∼p := sorry
+
+def Double_negation_intro_ : p ▸ ∼∼p := begin
+    apply Not_intro,
+    apply Not_elim,
+    apply Axiom 1, refl,
+    apply Axiom 0, refl,
+  end
+
+-- Need help
+def By_contradiction_ : (∼∼p or F) ▸ p := begin
+    apply Or_elim,
+    apply Axiom 0, refl,
+    apply Double_negation_elim,
+    apply Axiom 0, refl,
+    apply Bot_elim,
+    apply Axiom 0, refl,
+  end
 
 def Or_intro_left_ : p ▸ (p or q) := begin
-    let π := Or_intro_left (Axiom 0),
-    existsi π, simp [Proves],
+    apply Or_intro_left,
+    apply Axiom 0, refl,
   end
 
 def Or_intro_right_ : q ▸ (p or q) := begin
-    let π := Or_intro_right (Axiom 0),
-    existsi π, simp [Proves],
+    apply Or_intro_right, 
+    apply Axiom 0, refl,
   end
 
-def Or_elim_ : [p or q, p ⇒ r, q ⇒ r] ▸ r := sorry
+def Or_elim_ : [p or q, ∼p or r, ∼q or r] ▸ r := begin
+    apply Or_elim, 
+    apply Axiom 0, refl,
+    apply Impl_elim,
+    apply Axiom 0, refl,
+    apply Axiom 2, refl,
+    apply Impl_elim,
+    apply Axiom 0, refl,
+    apply Axiom 3, refl,
+  end
 
 def And_intro_ : [p, q] ▸ (p and q) := begin
-    let π : Prf := Not_intro
-      (Or_elim 0 
-        (Not_elim 0 (Axiom 2)) 
-        (Not_elim 0 (Axiom 3))),
-    existsi π, simp [Proves],
+    apply Not_intro, 
+    apply Or_elim,
+    apply Axiom 0, refl,
+    apply Not_elim,
+    apply Axiom 2, refl,
+    apply Axiom 0, refl,
+    apply Not_elim,
+    apply Axiom 3, refl,
+    apply Axiom 0, refl,
   end
 
 def And_elim_left_ : (p and q) ▸ p := begin
-    let π : Prf := 
-      By_contradiction 
-        (Not_elim 1 
-        (Or_intro_left (Axiom 0))),
-
-    existsi π,
-    unfold Proves, simp [Proves],
-  end
+      apply By_contradiction,
+      apply Not_elim,
+      apply Axiom 1, refl,
+      apply Double_negation_intro,
+      apply Or_intro_left,
+      apply Axiom 0, refl,
+    end
 
 def And_elim_right_ : (p and q) ▸ q := begin
-  let π : Prf :=
-    By_contradiction
-      (Not_elim 1
-      (Or_intro_right (Axiom 0))),
+      apply By_contradiction,
+      apply Not_elim,
+      apply Axiom 1, refl,
+      apply Double_negation_intro,
+      apply Or_intro_right,
+      apply Axiom 0, refl,
+    end
 
-    existsi π,
-    unfold Proves, simp [Proves],
+def excluded_middle : (p and ∼p) ▸ F := begin
+    apply Not_elim,
+    apply And_elim_left_,
+    apply And_elim_right_,
   end
-
-def redundency : (γ ▸ p) → ((γ.append Γ) ▸ p) := sorry
 
 def impl_elim : (p ▸ q) → (q ▸ r) → (p ▸ r) := sorry
 
@@ -153,8 +174,6 @@ def or_intro_right : (Γ ▸ q) → (Γ ▸ (p or q)) := sorry
 def or_elim : (Γ ▸ (p or q)) → (Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r)) → (Γ ▸ r) := sorry
 
 def and_intro : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := sorry
-
-def excluded_middle : ▸ (p or ∼p) := sorry
 
 end prf
 
