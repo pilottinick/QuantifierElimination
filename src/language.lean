@@ -57,26 +57,26 @@ notation φ₁` ⇔ `φ₂   := (φ₁ ⇒ φ₂) and (φ₂ ⇒ φ₁)
 open formula
 
 /-- If a formula is an atomic formula -/
-def is_atomic : formula L → bool
+def is_atomic : formula L → Prop
 | (_ ≃ _)         := true
 | (rel _ _)       := true
 | _               := false
 
 /-- If a variable occurs in a term -/
-def occurs_in_term (n : ℕ) : term L → bool
-| (v m)        := to_bool (n = m)
-| (func _ t)   := to_bool $ ∃ i, occurs_in_term (t i)
+def occurs_in_term (n : ℕ) : term L → Prop
+| (v m)        := n = m
+| (func _ t)   := ∃ i, occurs_in_term (t i)
 
 notation n \ t     := occurs_in_term _ n t
 
 /-- Def 1.5.2. If a variable is free in a formula -/
-def is_free (n : ℕ) : formula L → bool
+def is_free (n : ℕ) : formula L → Prop
 | F                 := false
-| (t₁ ≃ t₂)         := to_bool $ (occurs_in_term L n t₁) ∨ (occurs_in_term L n t₂)
-| (rel rsymb args)  := to_bool $ ∃ i, occurs_in_term L n (args i)
+| (t₁ ≃ t₂)         := (occurs_in_term L n t₁) ∨ (occurs_in_term L n t₂)
+| (rel rsymb args)  := ∃ i, occurs_in_term L n (args i)
 | ∼φ                := is_free φ
-| (φ₁ or φ₂)        := is_free φ₁ || is_free φ₂
-| (all m φ)         := !(n = m) && is_free φ
+| (φ₁ or φ₂)        := is_free φ₁ ∨ is_free φ₂
+| (all m φ)         := !(n = m) ∧ is_free φ
 
 /-- Def 1.8.1. The term with the variable x replaced by the term t -/
 def replace_term_with (x : ℕ) (t : term L) : term L → term L
@@ -93,13 +93,13 @@ def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
 /-- Def 1.8.3. The term t is substitutable for the variable x in formula φ -/
-def is_substitutable_for (x : ℕ) (t : term L) : formula L → bool
+def is_substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 | F                    := true
 | (_ ≃ _)              := true
 | (rel _ _)            := true
 | ∼φ                   := is_substitutable_for φ
-| (φ₁ or φ₂)           := to_bool $ (is_substitutable_for φ₁) ∧ (is_substitutable_for φ₂)
-| (all y φ)            := to_bool $ ¬(is_free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (is_substitutable_for φ))
+| (φ₁ or φ₂)           := (is_substitutable_for φ₁) ∧ (is_substitutable_for φ₂)
+| (all y φ)            := ¬(is_free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (is_substitutable_for φ))
 
 /-- Def 1.5.3. The sentences of a language -/
 def sentence : set (formula L) := λ φ, ∀ n : ℕ, ¬(is_free L n φ)
