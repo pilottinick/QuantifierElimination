@@ -46,6 +46,7 @@ notation ` v₄ `   := term.var 4
 notation ` v₅ `   := term.var 5
 
 notation ` F `        := formula.falsum
+notation ` T `        := formula.neg F
 infix ` ≃ `:88        := formula.eq
 prefix ` ∼ `:100      := formula.neg
 infix  ` or `:50      := formula.or
