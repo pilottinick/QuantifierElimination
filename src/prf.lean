@@ -157,8 +157,6 @@ def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   apply h1,
 end
 
--- def Prove_trans :  Γ ▸ q → q ▸ r → Γ ▸ r := sorry
-
 def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
     apply Or_elim,
     apply Axiom 0, refl,
@@ -271,7 +269,9 @@ def And_elim_left_ : (p and q) ▸ p := begin
       apply Axiom 0, refl,
     end
 
-def And_elim_left : Γ ▸ (p and q) → (p::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_left_
+def And_elim_left_R : Γ ▸ (p and q) → Γ ▸ p := To_Right_Rule And_elim_left_
+
+def And_elim_left_L : Γ ▸ (p and q) → (p::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_left_
 
 def And_elim_right_ : (p and q) ▸ q := begin
       apply By_contradiction,
@@ -281,7 +281,9 @@ def And_elim_right_ : (p and q) ▸ q := begin
       apply Axiom 0, refl,
     end
 
-def And_elim_right : Γ ▸ (p and q) → (q::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_right_
+def And_elim_right_R : Γ ▸ (p and q) → Γ ▸ q := To_Right_Rule And_elim_right_
+
+def And_elim_right_L : Γ ▸ (p and q) → (q::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_right_
 
 def NonContradiction_ : (p and ∼p) ▸ F := begin
     apply Not_elim,
@@ -325,7 +327,7 @@ def ExcludedMiddle_ : ▸ (p or ∼p) := begin
   apply By_contradiction,
   apply DeMorganNotOr_L,
   apply Axiom 0, refl,
-  apply And_elim_left,
+  apply And_elim_left_L,
   apply Axiom 0, refl,
   apply Not_elim,
   apply Axiom 2, refl,
@@ -346,12 +348,12 @@ def DeMorganOr_ : (∼p or ∼q) ▸ ∼(p and q) := begin
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 0, refl,
-    apply And_elim_left,
+    apply And_elim_left_L,
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
-    apply And_elim_right,
+    apply And_elim_right_L,
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 1, refl,
@@ -369,12 +371,12 @@ def DeMorganAnd_ : (∼p and ∼q) ▸ ∼(p or q) := begin
   apply Axiom 0, refl,
   apply Or_elim,
   apply Axiom 0, refl,
-  apply And_elim_left,
+  apply And_elim_left_L,
   apply Axiom 3, refl,
   apply Not_elim,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
-  apply And_elim_right,
+  apply And_elim_right_L,
   apply Axiom 3, refl,
   apply Not_elim,
   apply Axiom 0, refl,
@@ -386,9 +388,9 @@ def DeMorganAnd_R : Γ ▸ (∼p and ∼q) → Γ ▸ ∼(p or q) := To_Right_Ru
 def DeMorganAnd_L : Γ ▸ (∼p and ∼q) → ((∼(p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganAnd_
 
 def DistributionAndOr_ : (p and (q or r)) ▸ ((p and q) or (p and r)) := begin
-    apply And_elim_right,
+    apply And_elim_right_L,
     apply Axiom 0, refl,
-    apply And_elim_left,
+    apply And_elim_left_L,
     apply Axiom 1, refl,
     apply Or_elim,
     apply Axiom 1, refl,
@@ -415,11 +417,11 @@ def DistributionOrAnd_ : (p or (q and r)) ▸ ((p or q) and (p or r)) := begin
     apply Or_intro_left,
     apply Axiom 0, refl,
     apply And_intro,
-    apply And_elim_left,
+    apply And_elim_left_L,
     apply Axiom 0, refl,
     apply Or_intro_right,
     apply Axiom 0, refl,
-    apply And_elim_right,
+    apply And_elim_right_L,
     apply Axiom 0, refl,
     apply Or_intro_right,
     apply Axiom 0, refl,
@@ -435,30 +437,6 @@ def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
     apply and.elim_left h,
     apply and.elim_right h,
   end
-
-/-
-def ProvesOrLeft : (Γ ▸ (p or q)) → (Γ ▸ p) := sorry
-
-def ProvesOrRight : (Γ ▸ (p or q)) → (Γ ▸ q) := sorry
-
-def ProvesOr : (Γ ▸ (p or q)) → (Γ ▸ p) ∨ (Γ ▸ q) := begin
-    intro h,
-    apply or.intro_left,
-    apply ProvesOrLeft,
-    apply h,
-  end
-
-
-def NotProves : ¬(Γ ▸ p) → (Γ ▸ ∼p) := begin
-   intro h,
-   let φ : (Γ ▸ p) ∨ (Γ ▸ ∼p) := ProvesOr ExcludedMiddle,
-   apply or.elim φ,
-   intro h1,
-   exact absurd h1 h,
-   intro h2,
-   assumption,
-end
--/
 
 end prf
 

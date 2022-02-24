@@ -58,6 +58,7 @@ open formula
 
 /-- If a formula is an atomic formula -/
 def is_atomic : formula L → Prop
+| F               := true
 | (_ ≃ _)         := true
 | (rel _ _)       := true
 | _               := false
