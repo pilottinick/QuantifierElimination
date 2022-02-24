@@ -42,6 +42,20 @@ lemma nth_cons_some : ∀ {A : Type} {l1 l2 : list A},
         existsi w.succ, assumption },
   end
 
+
+
+lemma nth_append_r : ∀ {A : Type} {l1 l2 : list A} n, (l1 ++ l2).nth (n + l1.length) = l2.nth n := begin
+  intros A l1 l2 n,
+  induction l1,
+  simp,
+  simp,
+  rw ← add_assoc,
+  rw ← add_comm,
+  rw nat.one_add,
+  simp,
+  apply l1_ih,
+end
+
 def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
   γ ▸ p → Γ ▸ p := begin
     intros h γp, revert Γ h,
@@ -69,15 +83,77 @@ def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
     apply nth_append_some, assumption,
   end
 
-def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := sorry
+def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
+    intros h1 h2,
+    apply Cut,
+    apply h2,
+    apply weakening _ h1,
+    intros n h3 h4,
+    cases n,
+    simp at *,
+    existsi 0,
+    simp,
+    apply h4,
+    contradiction,
+  end
 
-def To_Left_Rule : (p ▸ q) → (Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r) := sorry
+variables (h : formula L) (l : list (formula L))
 
-def Impl_proves : (Γ ▸ (p ⇒ q)) → (p::Γ) ▸ q := sorry
+def To_Right_Rule_List : ((h::l) ▸ q) → (Γ ▸ h → (l ++ Γ) ▸ q) := begin
+    intros h1 h2,
+    apply Cut,
+    apply weakening _ h2,
+    intros n1 h3 h4,
+    existsi (n1 + l.length),
+    rw nth_append_r,
+    apply h4,
+    apply weakening,
+    intros n2 h5 h6,
+    apply nth_cons_some,
+    intros n3 h7 h8,
+    existsi n3,
+    apply nth_append_some,
+    apply h8,
+    apply h6,
+    apply h1,
+  end
 
-def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := sorry
+def To_Left_Rule : (p ▸ q) → (Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r) := begin
+    intros h1 h2 h3,
+    apply Cut,
+    apply To_Right_Rule,
+    apply h1,
+    apply h2,
+    apply h3,
+  end
 
-def Prove_trans :  Γ ▸ q → q ▸ r → Γ ▸ r := sorry
+-- def Impl_proves : (Γ ▸ (p ⇒ q)) → (p::Γ) ▸ q := sorry
+
+def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
+  intro h,
+  simp,
+  apply By_contradiction,
+  apply Not_elim,
+  apply Axiom 0, refl,
+  apply Or_intro_right,
+  apply Cut p,
+  apply By_contradiction,
+  apply Not_elim,
+  apply Axiom 1, refl,
+  apply Or_intro_left,
+  apply Axiom 0, refl,
+  apply weakening _ h,
+  intros n φ h1,
+  cases n,
+  existsi 0,
+  simp at *,
+  apply h1,
+  existsi n.succ.succ,
+  simp at *,
+  apply h1,
+end
+
+-- def Prove_trans :  Γ ▸ q → q ▸ r → Γ ▸ r := sorry
 
 def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
     apply Or_elim,
@@ -155,19 +231,11 @@ def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
   end
 
 def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := begin
-    assume H1 H2,
+    intros h1 h2,
     apply Cut,
-      apply H1,
-      apply Cut,
-        apply (weakening _ H2),
-          { intros, existsi n.succ, assumption },
-          { simp, apply weakening _ (@Impl_elim_ _ p q),
-              { intros n _ _, cases n,
-                  { existsi 1, assumption },
-                  { cases n,
-                      { existsi 0, assumption },
-                      { contradiction }, }
-               } }
+    apply h2,
+    apply To_Right_Rule_List _ _ Impl_elim_,
+    apply h1,
   end
 
 def And_intro_ : [p, q] ▸ (p and q) := begin
@@ -183,7 +251,13 @@ def And_intro_ : [p, q] ▸ (p and q) := begin
     apply Axiom 3, refl,
   end
 
-def And_intro : Γ ▸ p → Γ ▸ q → Γ ▸ (p and q) := sorry
+def And_intro : Γ ▸ p → Γ ▸ q → Γ ▸ (p and q) := begin
+    intros h1 h2,
+    apply Cut,
+    apply h2,
+    apply To_Right_Rule_List _ _ And_intro_,
+    apply h1,
+  end
 
 def And_elim_left_ : (p and q) ▸ p := begin
       apply By_contradiction,
@@ -255,7 +329,11 @@ def ExcludedMiddle_ : ▸ (p or ∼p) := begin
   apply Axiom 0, refl,
 end
 
-def ExcludedMiddle : Γ ▸ (p or ∼p) := sorry
+def ExcludedMiddle : Γ ▸ (p or ∼p) := begin
+  apply weakening _ ExcludedMiddle_,
+  intros n φ h,
+  contradiction,
+end
 
 def DeMorganOr_ : (∼p or ∼q) ▸ ∼(p and q) := begin
     apply Not_intro,
@@ -354,7 +432,7 @@ def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
     apply and.elim_right h,
   end
 
--- TODO
+/-
 def ProvesOrLeft : (Γ ▸ (p or q)) → (Γ ▸ p) := sorry
 
 def ProvesOrRight : (Γ ▸ (p or q)) → (Γ ▸ q) := sorry
@@ -366,6 +444,7 @@ def ProvesOr : (Γ ▸ (p or q)) → (Γ ▸ p) ∨ (Γ ▸ q) := begin
     apply h,
   end
 
+
 def NotProves : ¬(Γ ▸ p) → (Γ ▸ ∼p) := begin
    intro h,
    let φ : (Γ ▸ p) ∨ (Γ ▸ ∼p) := ProvesOr ExcludedMiddle,
@@ -375,6 +454,7 @@ def NotProves : ¬(Γ ▸ p) → (Γ ▸ ∼p) := begin
    intro h2,
    assumption,
 end
+-/
 
 end prf
 
