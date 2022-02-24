@@ -78,6 +78,25 @@ def is_free (n : ℕ) : formula L → Prop
 | (φ₁ or φ₂)        := is_free φ₁ ∨ is_free φ₂
 | (all m φ)         := !(n = m) ∧ is_free φ
 
+/-- If a formula is quantifier free-/
+def is_quantifier_free : formula L → Prop
+| ∼φ                 := is_quantifier_free φ
+| (φ₁ or φ₂)         := (is_quantifier_free φ₁) ∧ (is_quantifier_free φ₂)
+| (all n φ)          := false
+| _                  := true
+
+/-- If a propositional logic formula is in disjunctive normal form -/
+def is_dnf_prop : formula L → Prop
+| ∼φ                 := is_atomic _ φ
+| (φ₁ or φ₂)         := is_dnf_prop φ₁ ∧ is_dnf_prop φ₂
+| (all n φ)          := false
+| _                  := true
+
+/-- If a first order logic formula is in disjunctive normal form -/
+def is_dnf : formula L → Prop
+| (all n φ)         := is_dnf φ
+| φ                 := is_dnf_prop _ φ
+
 /-- Def 1.8.1. The term with the variable x replaced by the term t -/
 def replace_term_with (x : ℕ) (t : term L) : term L → term L
 | (v n)              := if (n = x) then t else (v n)
