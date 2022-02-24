@@ -78,6 +78,10 @@ def is_free (n : ℕ) : formula L → Prop
 | (φ₁ or φ₂)        := is_free φ₁ ∨ is_free φ₂
 | (all m φ)         := !(n = m) ∧ is_free φ
 
+def var_not_free_in (n : ℕ) : list (formula L) → Prop
+| list.nil             := true
+| (list.cons h t)      := ¬(is_free _ n h) ∧ (var_not_free_in t)
+
 /-- If a formula is quantifier free-/
 def is_quantifier_free : formula L → Prop
 | ∼φ                 := is_quantifier_free φ

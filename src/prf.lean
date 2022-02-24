@@ -14,6 +14,8 @@ inductive Prf : list (formula L) → formula L → Prop
 | Or_intro_left : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
+| All_intro : ∀ {Γ} φ n m, var_not_free_in _ m Γ → Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
+| All_elim : ∀ {Γ} φ n ψ, Prf Γ (formula.all n φ) → Prf Γ (replace_formula_with _ n ψ φ)
 | Cut : ∀ {Γ} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
@@ -72,6 +74,8 @@ def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
         { apply γp_ih_ᾰ, assumption },
         { apply γp_ih_ᾰ_1, apply nth_cons_some, assumption },
         { apply γp_ih_ᾰ_2, apply nth_cons_some, assumption },
+      admit,
+      admit,
       apply Cut,
         { apply γp_ih_ᾰ, assumption },
         { apply γp_ih_ᾰ_1, apply nth_cons_some, assumption },
