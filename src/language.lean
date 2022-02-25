@@ -58,7 +58,7 @@ open formula
 
 /-- If a formula is an atomic formula -/
 def is_atomic : formula L → Prop
-| F               := true
+| F                := true
 | (_ ≃ _)         := true
 | (rel _ _)       := true
 | _               := false
@@ -92,10 +92,14 @@ def is_quantifier_free : formula L → Prop
 
 /-- If a propositional logic formula is in disjunctive normal form -/
 def is_dnf_prop : formula L → Prop
-| ∼φ                 := is_atomic _ φ
+| (φ₁ and φ₂)        := is_dnf_prop φ₁ ∧ is_dnf_prop φ₂
+| ∼φ                 := (is_atomic _ φ)
 | (φ₁ or φ₂)         := is_dnf_prop φ₁ ∧ is_dnf_prop φ₂
 | (all n φ)          := false
 | _                  := true
+
+#check is_dnf_prop
+#reduce is_dnf_prop L ∼F
 
 /-- If a first order logic formula is in disjunctive normal form -/
 def is_dnf : formula L → Prop

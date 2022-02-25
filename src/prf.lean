@@ -101,10 +101,24 @@ def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
     contradiction,
   end
 
+def To_Right_Rule_All : (p ▸ q) → (∀ Γ : (list (formula L)), Γ ▸ p → Γ ▸ q) := begin
+    intros h1 Γ h2,
+    apply Cut,
+    apply h2,
+    apply weakening _ h1,
+    intros n h3 h4,
+    cases n,
+    simp at *,
+    existsi 0,
+    simp,
+    apply h4,
+    contradiction,
+  end
+
 variables (h : formula L) (l : list (formula L))
 
-def To_Right_Rule_List : ((h::l) ▸ q) → (Γ ▸ h → (l ++ Γ) ▸ q) := begin
-    intros h1 h2,
+def To_Right_Rule_List : ((h::l) ▸ q) → (∀ Γ : (list (formula L)), Γ ▸ h → (l ++ Γ) ▸ q) := begin
+    intros h1 Γ h2,
     apply Cut,
     apply weakening _ h2,
     intros n1 h3 h4,
@@ -122,7 +136,7 @@ def To_Right_Rule_List : ((h::l) ▸ q) → (Γ ▸ h → (l ++ Γ) ▸ q) := be
     apply h1,
   end
 
-def To_Left_Rule : (p ▸ q) → (Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r) := begin
+def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begin
     intros h1 h2 h3,
     apply Cut,
     apply To_Right_Rule,
@@ -130,6 +144,13 @@ def To_Left_Rule : (p ▸ q) → (Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r) := be
     apply h2,
     apply h3,
   end
+
+def Right_To_ND_Rule : (∀ Γ : (list (formula L)), Γ ▸ p → Γ ▸ q) → (p ▸ q):= begin
+  intro h1,
+  have h2 : [p] ▸ p → [p] ▸ q := h1 (p::[]),
+  have h3 : [p] ▸ p := begin apply Prf.Axiom 0, refl, end,
+  exact (h2 h3),
+end
 
 -- def Impl_proves : (Γ ▸ (p ⇒ q)) → (p::Γ) ▸ q := sorry
 
@@ -431,12 +452,102 @@ def DistributionOrAnd_R : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or
 
 def DistributionOrAnd_L : Γ ▸ (p or (q and r)) → (((p or q) and (p or r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAnd_
 
-def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
-    intro h,
+def Contrapositive_ : (∼ p ▸ q) ↔ (∼q ▸ p) := begin
+  apply iff.intro,
+  intro h1,
+  apply Prf.By_contradiction,
+  apply Prf.Not_elim,
+  apply Axiom 1, refl,
+  apply weakening _ h1,
+  intros n x h2,
+  cases n,
+  existsi 0,
+  apply h2,
+  contradiction,
+  intro h1,
+  apply Prf.By_contradiction,
+  apply Prf.Not_elim,
+  apply Axiom 1, refl,
+  apply weakening _ h1,
+  intros n x h2,
+  cases n,
+  existsi 0,
+  apply h2,
+  contradiction,
+end
+
+def AndProves : ∀ Γ : (list (formula L)), (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
+    intros Γ h,
     apply And_intro,
     apply and.elim_left h,
     apply and.elim_right h,
   end
+
+def NotProves : (Γ ▸ ∼p) ↔ ¬(Γ ▸ p) := sorry
+
+def Contrapose : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼q → Γ ▸ ∼p) := begin
+  intro h1,
+  intro h2,
+  apply by_contra,
+  intro h3,
+  have h4 : Γ ▸ ∼∼p := NotProves.mpr h3,
+  have h5 : Γ ▸ p := begin apply Double_negation_elim_R h4 end,
+  have h6 : Γ ▸ q := h1 h5,
+  have h7 : ¬(Γ ▸ q) := NotProves.mp h2,
+  apply h7 h6,
+end
+
+def NegEquiv : (Γ ▸ ∼p ↔ Γ ▸ q) ↔ (Γ ▸ p ↔ Γ ▸ ∼q) := begin
+  apply iff.intro,
+  intro h1,
+  apply iff.intro,
+  intro h2,
+  have h3 : Γ ▸ ∼∼p → Γ ▸ ∼q := Contrapose h1.mpr,
+  apply h3,
+  apply Double_negation_intro_R,
+  apply h2,
+  intro h3,
+  have h4 : Γ ▸ ∼q → Γ ▸ ∼∼p := Contrapose h1.mp,
+  apply Double_negation_elim_R,
+  apply h4 h3,
+  intro h1,
+  apply iff.intro,
+  intro h2,
+  have h3 : Γ ▸ ∼p → Γ ▸ ∼∼q := Contrapose h1.mpr,
+  apply Double_negation_elim_R,
+  apply h3 h2,
+  intro h2,
+  have h4 : Γ ▸ ∼∼q → Γ ▸ ∼p := Contrapose h1.mp,
+  apply h4,
+  apply Double_negation_intro_R,
+  apply h2,
+end
+
+def NegNegEquiv : (Γ ▸ p ↔ Γ ▸ q) ↔ (Γ ▸ ∼p ↔ Γ ▸ ∼q) := begin
+  apply iff.intro,
+  intro h1,
+  apply iff.intro,
+  intro h2,
+  have h3 : Γ ▸ ∼p → Γ ▸ ∼q := Contrapose h1.mpr,
+  apply h3 h2,
+  intro h2,
+  have h3 : Γ ▸ ∼q → Γ ▸ ∼p := Contrapose h1.mp,
+  apply h3 h2,
+  intro h2,
+  apply iff.intro,
+  intro h3,
+  have h4 : Γ ▸ ∼∼p → Γ ▸ ∼∼q := Contrapose h2.mpr,
+  have h5 : Γ ▸ ∼∼p := Double_negation_intro_R h3,
+  apply Double_negation_elim_R,
+  apply h4 h5,
+  intro h3,
+  have h4 : Γ ▸ ∼∼q → Γ ▸ ∼∼p := Contrapose h2.mp,
+  have h5 : Γ ▸ ∼∼q := Double_negation_intro_R h3,
+  apply Double_negation_elim_R,
+  apply h4 h5,
+end
+
+def OrEquiv : (Γ ▸ p ↔ Γ ▸ (q or r)) ↔ ((Γ ▸ p ↔ Γ ▸ q) ∨ ((Γ ▸ p ↔ Γ ▸ r))) := sorry
 
 end prf
 
