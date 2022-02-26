@@ -27,10 +27,17 @@ notation φ` ▸ `ψ := Prf (φ::[]) ψ
 
 notation ` ▸ `φ := Prf list.nil φ
 
-variables {p q r s : formula L}
+variables {p p₁ p₂ q q₁ q₂ r s : formula L}
 
 variables {Γ γ : list (formula L)}
 
+-- If a set of axioms is consistent
+def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
+
+-- If a set of axiom is complete
+def is_complete (Γ : list (formula L)) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
+
+-- Weakening
 lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
 | A (y :: l1) l2 0 x h := h
 | A (y :: l1) l2 (n+1) x h := @nth_append_some A l1 l2 n x h
@@ -87,6 +94,7 @@ def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
     apply nth_append_some, assumption,
   end
 
+-- Converting natural deduction rules into sequent calculus rules
 def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
     intros h1 h2,
     apply Cut,
@@ -178,6 +186,7 @@ def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   apply h1,
 end
 
+-- Basic intro and elim ND rules
 def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
     apply Or_elim,
     apply Axiom 0, refl,
@@ -314,6 +323,7 @@ def NonContradiction_ : (p and ∼p) ▸ F := begin
 
 def NonContradiction : Γ ▸ (p and ∼p) → Γ ▸ F := To_Right_Rule NonContradiction_
 
+-- DeMorgan laws
 def DeMorganNotAnd_ : ∼(p and q) ▸ (∼p or ∼q) := begin
     apply By_contradiction,
     apply Not_elim,
@@ -408,6 +418,7 @@ def DeMorganAnd_R : Γ ▸ (∼p and ∼q) → Γ ▸ ∼(p or q) := To_Right_Ru
 
 def DeMorganAnd_L : Γ ▸ (∼p and ∼q) → ((∼(p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganAnd_
 
+-- Distribution of and and or
 def DistributionAndOr_ : (p and (q or r)) ▸ ((p and q) or (p and r)) := begin
     apply And_elim_right_L,
     apply Axiom 0, refl,
@@ -452,102 +463,46 @@ def DistributionOrAnd_R : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or
 
 def DistributionOrAnd_L : Γ ▸ (p or (q and r)) → (((p or q) and (p or r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAnd_
 
-def Contrapositive_ : (∼ p ▸ q) ↔ (∼q ▸ p) := begin
-  apply iff.intro,
-  intro h1,
-  apply Prf.By_contradiction,
-  apply Prf.Not_elim,
-  apply Axiom 1, refl,
-  apply weakening _ h1,
-  intros n x h2,
-  cases n,
-  existsi 0,
-  apply h2,
-  contradiction,
-  intro h1,
-  apply Prf.By_contradiction,
-  apply Prf.Not_elim,
-  apply Axiom 1, refl,
-  apply weakening _ h1,
-  intros n x h2,
-  cases n,
-  existsi 0,
-  apply h2,
-  contradiction,
-end
+-- Commutativity rules 
+def Or_comm_ : (p or q) ▸ (q or p) := sorry
 
-def AndProves : ∀ Γ : (list (formula L)), (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
-    intros Γ h,
+def Or_comm_R : Γ ▸ (p or q) → Γ ▸ (q or p) := To_Right_Rule Or_comm_
+
+-- Contrapositive and logical operations on proofs
+def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
+    intros h,
     apply And_intro,
     apply and.elim_left h,
     apply and.elim_right h,
   end
 
-def NotProves : (Γ ▸ ∼p) ↔ ¬(Γ ▸ p) := sorry
-
-def Contrapose : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼q → Γ ▸ ∼p) := begin
-  intro h1,
-  intro h2,
-  apply by_contra,
-  intro h3,
-  have h4 : Γ ▸ ∼∼p := NotProves.mpr h3,
-  have h5 : Γ ▸ p := begin apply Double_negation_elim_R h4 end,
-  have h6 : Γ ▸ q := h1 h5,
-  have h7 : ¬(Γ ▸ q) := NotProves.mp h2,
-  apply h7 h6,
+def Contrapose_ : (p ⇒ q) ▸ (∼q ⇒ ∼p) := begin
+  simp,
+  apply Or_elim,
+  apply Axiom 0, refl,
+  apply Or_intro_right,
+  apply Axiom 0, refl,
+  apply Proves_impl,
+  apply Not_elim,
+  apply Axiom 0, refl,
+  apply Axiom 1, refl,
 end
 
-def NegEquiv : (Γ ▸ ∼p ↔ Γ ▸ q) ↔ (Γ ▸ p ↔ Γ ▸ ∼q) := begin
-  apply iff.intro,
-  intro h1,
-  apply iff.intro,
-  intro h2,
-  have h3 : Γ ▸ ∼∼p → Γ ▸ ∼q := Contrapose h1.mpr,
-  apply h3,
-  apply Double_negation_intro_R,
-  apply h2,
-  intro h3,
-  have h4 : Γ ▸ ∼q → Γ ▸ ∼∼p := Contrapose h1.mp,
-  apply Double_negation_elim_R,
-  apply h4 h3,
-  intro h1,
-  apply iff.intro,
-  intro h2,
-  have h3 : Γ ▸ ∼p → Γ ▸ ∼∼q := Contrapose h1.mpr,
-  apply Double_negation_elim_R,
-  apply h3 h2,
-  intro h2,
-  have h4 : Γ ▸ ∼∼q → Γ ▸ ∼p := Contrapose h1.mp,
-  apply h4,
-  apply Double_negation_intro_R,
-  apply h2,
-end
+def Contrapose_R : Γ ▸ (p ⇒ q) → Γ ▸ (∼q ⇒ ∼p) := To_Right_Rule Contrapose_
 
-def NegNegEquiv : (Γ ▸ p ↔ Γ ▸ q) ↔ (Γ ▸ ∼p ↔ Γ ▸ ∼q) := begin
-  apply iff.intro,
-  intro h1,
-  apply iff.intro,
-  intro h2,
-  have h3 : Γ ▸ ∼p → Γ ▸ ∼q := Contrapose h1.mpr,
-  apply h3 h2,
-  intro h2,
-  have h3 : Γ ▸ ∼q → Γ ▸ ∼p := Contrapose h1.mp,
-  apply h3 h2,
-  intro h2,
-  apply iff.intro,
-  intro h3,
-  have h4 : Γ ▸ ∼∼p → Γ ▸ ∼∼q := Contrapose h2.mpr,
-  have h5 : Γ ▸ ∼∼p := Double_negation_intro_R h3,
-  apply Double_negation_elim_R,
-  apply h4 h5,
-  intro h3,
-  have h4 : Γ ▸ ∼∼q → Γ ▸ ∼∼p := Contrapose h2.mp,
-  have h5 : Γ ▸ ∼∼q := Double_negation_intro_R h3,
-  apply Double_negation_elim_R,
-  apply h4 h5,
-end
+def Impl_To_Right_Rule : (Γ ▸ (p ⇒ q)) → (Γ ▸ p → Γ ▸ q) := sorry
 
-def OrEquiv : (Γ ▸ p ↔ Γ ▸ (q or r)) ↔ ((Γ ▸ p ↔ Γ ▸ q) ∨ ((Γ ▸ p ↔ Γ ▸ r))) := sorry
+def Right_Rule_Impl : ((Γ ▸ p) → (Γ ▸ q)) → ((Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r))) := sorry
+
+def Impl_Right_Rule : ((Γ ▸ p) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ p)) → (Γ ▸ (r ⇒ q))) := sorry
+
+def Left_And_Impl_Right_Rule : ((Γ ▸ p₁) → (Γ ▸ q)) → ((Γ ▸ ((p₁ and p₂) ⇒ r)) → (Γ ▸ ((q and p₂) ⇒ r))) := sorry
+
+def Right_And_Impl_Right_Rule : ((Γ ▸ p₂) → (Γ ▸ q)) → ((Γ ▸ ((p₁ and p₂) ⇒ r)) → (Γ ▸ ((p₁ and q) ⇒ r))) := sorry
+
+def Left_And_Right_Rule_Impl : ((Γ ▸ p₁) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ (p₁ and p₂))) → (Γ ▸ (r ⇒ (q and p₂)))) := sorry
+
+def Right_And_Right_Rule_Impl : ((Γ ▸ p₂) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ (p₁ and p₂))) → (Γ ▸ (r ⇒ (p₁ and q)))) := sorry
 
 end prf
 
