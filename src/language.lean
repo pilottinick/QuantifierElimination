@@ -56,55 +56,185 @@ notation φ₁` ⇔ `φ₂   := (φ₁ ⇒ φ₂) and (φ₂ ⇒ φ₁)
 
 open formula
 
-/-- If a formula is an atomic formula -/
-def is_atomic : formula L → Prop
+variables (φ : formula L) (n : ℕ) 
+
+/- If a formula is an atomic formula -/
+def atomic : formula L → Prop
 | F                := true
 | (_ ≃ _)         := true
 | (rel _ _)       := true
 | _               := false
 
-/-- If a variable occurs in a term -/
+/- If a formula is the negative of an atomic formula -/
+def neg_atomic : formula L → Prop
+| ∼φ              := atomic _ φ
+| _               := false
+
+lemma neg_atomic_phi_atomic : neg_atomic _ ∼φ → atomic _ φ := begin
+  intro h,
+  unfold neg_atomic at h,
+  assumption,
+end 
+
+/- If a formula is an atomic formula or the negation of an atomic formula -/
+def literal : formula L → Prop 
+| F                  := true
+| (t₁ ≃ t₂)          := true
+| (rel rsymb args)   := true
+| ∼φ                 := atomic _ φ
+| _                  := false
+
+/- A literal is either atomic or the negation of an atomic formula -/
+lemma literal_atomic_or_neg_atomic :
+    literal _ φ ↔ (∃ ψ : formula L, (atomic _ ψ) ∧ (φ = ψ ∨ φ = ∼ψ)) := begin
+  split,
+  intro lit,
+  cases φ,
+  existsi F, simp,
+  existsi (φ_ᾰ ≃ φ_ᾰ_1), simp,
+  existsi rel φ_ᾰ φ_ᾰ_1, simp,
+  unfold literal at lit,
+  existsi φ,
+  apply and.intro,
+  assumption,
+  simp,
+  any_goals { by { unfold literal at lit, apply false.elim lit } },
+  intro atom,
+  cases φ,
+  all_goals { unfold literal },
+  apply exists.elim atom,
+  intros ψ h,
+  have h1 : atomic _ ψ := and.elim_left h,
+  have h2 : (∼φ = ψ ∨ ∼φ = ∼ψ)  := and.elim_right h,
+  apply or.elim h2,
+  intro p,
+  rw ← p at h1,
+  unfold atomic at h1,
+  apply false.elim h1,
+  intro np,
+  have φeqψ: φ = ψ := begin simp at np, assumption end,
+  rw φeqψ,
+  assumption,
+  have atom' : ¬ (∀ (ψ : formula L), ¬(atomic L ψ ∧ (φ_ᾰ or φ_ᾰ_1 = ψ ∨ φ_ᾰ or φ_ᾰ_1 =  ∼ ψ))) := not_forall_not.mpr atom,
+  have natom' : ∀ (ψ : formula L), ¬(atomic L ψ ∧ (φ_ᾰ or φ_ᾰ_1 = ψ ∨ φ_ᾰ or φ_ᾰ_1 =  ∼ ψ)) := begin
+    intros ψ f,
+    have ψatom : atomic _ ψ := and.elim_left f,
+    have ψeq : φ_ᾰ or φ_ᾰ_1 = ψ ∨ φ_ᾰ or φ_ᾰ_1 = ∼ψ := and.elim_right f,
+    apply or.elim ψeq,
+    intro f1,
+    rw ← f1 at ψatom,
+    unfold atomic at ψatom,
+    assumption,
+    intro f2,
+    have nf2 : ¬(φ_ᾰ or φ_ᾰ_1 =  ∼ ψ) := begin simp end,
+    contradiction,
+  end,
+  contradiction,
+  have atom' : ¬ (∀ (ψ : formula L), ¬(atomic L ψ ∧ (formula.all φ_ᾰ φ_ᾰ_1 = ψ ∨ formula.all φ_ᾰ φ_ᾰ_1 =  ∼ ψ))) := not_forall_not.mpr atom,
+  have natom' : ∀ (ψ : formula L), ¬(atomic L ψ ∧ (formula.all φ_ᾰ φ_ᾰ_1 = ψ ∨ formula.all φ_ᾰ φ_ᾰ_1 =  ∼ ψ)) := begin
+    intros ψ f,
+    have ψatom : atomic _ ψ := and.elim_left f,
+    have ψeq : formula.all φ_ᾰ φ_ᾰ_1 = ψ ∨ formula.all φ_ᾰ φ_ᾰ_1 = ∼ψ := and.elim_right f,
+    apply or.elim ψeq,
+    intro f1,
+    rw ← f1 at ψatom,
+    unfold atomic at ψatom,
+    assumption,
+    intro f2,
+    have nf2 : ¬(formula.all φ_ᾰ φ_ᾰ_1 =  ∼ ψ) := begin simp end,
+    contradiction,
+  end,
+  contradiction,
+end
+
+/- Atomics are literals -/
+def atomic_literal : atomic _ φ → literal _ φ := begin
+  intros h,
+  have lit : (∃ ψ : formula L, (atomic _ ψ) ∧ (φ = ψ ∨ φ = ∼ψ)) := begin
+    existsi φ,
+    apply and.intro,
+    assumption,
+    simp,
+  end,
+  apply (literal_atomic_or_neg_atomic _ φ).mpr lit,
+end
+
+/- Negations of atomics are literals -/
+def neg_atomic_literal : atomic _ φ → literal _ ∼φ := begin
+  intros h,
+  have lit : (∃ ψ : formula L, (atomic _ ψ) ∧ (∼φ = ψ ∨ ∼φ = ∼ψ)) := begin
+    existsi φ,
+    apply and.intro,
+    assumption,
+    simp,
+  end,
+  apply (literal_atomic_or_neg_atomic _ ∼φ).mpr lit,
+end
+
+/- Take the disjunction of a non-empty list of formulas -/
+def disjunction (φ : formula L) : list (formula L) → formula L
+| list.nil         := φ
+| (list.cons h t)  := h or (disjunction t)
+
+prefix ` Or `:120 := disjunction _
+
+def conjunction (φ : formula L) : list (formula L) → formula L
+| list.nil         := φ
+| (list.cons h t)  := h and (conjunction t)
+
+prefix ` And `:120 := conjunction _
+
+/- The conjunction of a non-empty list of formulas -/
+
+/- If a variable occurs in a term -/
 def occurs_in_term (n : ℕ) : term L → Prop
 | (v m)        := n = m
 | (func _ t)   := ∃ i, occurs_in_term (t i)
 
 notation n \ t     := occurs_in_term _ n t
 
-/-- Def 1.5.2. If a variable is free in a formula -/
-def is_free (n : ℕ) : formula L → Prop
+/- Def 1.5.2. If a variable is free in a formula -/
+def free (n : ℕ) : formula L → Prop
 | F                 := false
 | (t₁ ≃ t₂)         := (occurs_in_term L n t₁) ∨ (occurs_in_term L n t₂)
 | (rel rsymb args)  := ∃ i, occurs_in_term L n (args i)
-| ∼φ                := is_free φ
-| (φ₁ or φ₂)        := is_free φ₁ ∨ is_free φ₂
-| (all m φ)         := !(n = m) ∧ is_free φ
+| ∼φ                := free φ
+| (φ₁ or φ₂)        := free φ₁ ∨ free φ₂
+| (all m φ)         := !(n = m) ∧ free φ
+
+def free_dec : decidable (free _ n φ) := sorry
 
 def var_not_free_in (n : ℕ) : list (formula L) → Prop
 | list.nil             := true
-| (list.cons h t)      := ¬(is_free _ n h) ∧ (var_not_free_in t)
+| (list.cons h t)      := ¬(free _ n h) ∧ (var_not_free_in t)
 
 /-- If a formula is quantifier free-/
-def is_quantifier_free : formula L → Prop
-| ∼φ                 := is_quantifier_free φ
-| (φ₁ or φ₂)         := (is_quantifier_free φ₁) ∧ (is_quantifier_free φ₂)
+def quantifier_free : formula L → Prop
+| ∼φ                 := quantifier_free φ
+| (φ₁ or φ₂)         := (quantifier_free φ₁) ∧ (quantifier_free φ₂)
 | (all n φ)          := false
 | _                  := true
 
 /-- If a propositional logic formula is in disjunctive normal form -/
-def is_dnf_prop : formula L → Prop
-| (φ₁ and φ₂)        := is_dnf_prop φ₁ ∧ is_dnf_prop φ₂
-| ∼φ                 := (is_atomic _ φ)
-| (φ₁ or φ₂)         := is_dnf_prop φ₁ ∧ is_dnf_prop φ₂
+def dnf_prop : formula L → Prop
+| ∼φ                 := match φ with
+                        | F                 := true
+                        | (t₁ ≃ t₂)         := true
+                        | (rel rsymb args)  := true
+                        | ∼φ                := false
+                        | (φ₁ or φ₂)        := neg_atomic _ φ₁ ∧ neg_atomic _ φ₂
+                        | _                 := false
+                        end
+| (φ₁ or φ₂)         := dnf_prop φ₁ ∧ dnf_prop φ₂
 | (all n φ)          := false
 | _                  := true
 
-#check is_dnf_prop
-#reduce is_dnf_prop L ∼F
-
 /-- If a first order logic formula is in disjunctive normal form -/
-def is_dnf : formula L → Prop
-| (all n φ)         := is_dnf φ
-| φ                 := is_dnf_prop _ φ
+def dnf : formula L → Prop
+| (all n φ)         := dnf φ
+| φ                 := dnf_prop _ φ
+
+instance decidable_dnf : decidable (dnf _ φ) := sorry
 
 /-- Def 1.8.1. The term with the variable x replaced by the term t -/
 def replace_term_with (x : ℕ) (t : term L) : term L → term L
@@ -121,16 +251,16 @@ def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
 /-- Def 1.8.3. The term t is substitutable for the variable x in formula φ -/
-def is_substitutable_for (x : ℕ) (t : term L) : formula L → Prop
+def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 | F                    := true
 | (_ ≃ _)              := true
 | (rel _ _)            := true
-| ∼φ                   := is_substitutable_for φ
-| (φ₁ or φ₂)           := (is_substitutable_for φ₁) ∧ (is_substitutable_for φ₂)
-| (all y φ)            := ¬(is_free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (is_substitutable_for φ))
+| ∼φ                   := substitutable_for φ
+| (φ₁ or φ₂)           := (substitutable_for φ₁) ∧ (substitutable_for φ₂)
+| (all y φ)            := ¬(free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (substitutable_for φ))
 
 /-- Def 1.5.3. The sentences of a language -/
-def sentence : set (formula L) := λ φ, ∀ n : ℕ, ¬(is_free L n φ)
+def sentence : set (formula L) := λ φ, ∀ n : ℕ, ¬(free L n φ)
 
 end language
 
