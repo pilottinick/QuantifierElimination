@@ -56,9 +56,10 @@ notation φ₁` ⇔ `φ₂   := (φ₁ ⇒ φ₂) and (φ₂ ⇒ φ₁)
 
 open formula
 
-variables (φ : formula L) (n : ℕ) 
+variables (φ φ₁ φ₂ h : formula L) (t Φ₁ Φ₂ : list (formula L)) (n : ℕ) 
 
 /- If a formula is an atomic formula -/
+attribute [simp]
 def atomic : formula L → Prop
 | F                := true
 | (_ ≃ _)         := true
@@ -66,6 +67,7 @@ def atomic : formula L → Prop
 | _               := false
 
 /- If a formula is the negative of an atomic formula -/
+attribute [simp]
 def neg_atomic : formula L → Prop
 | ∼φ              := atomic _ φ
 | _               := false
@@ -77,6 +79,7 @@ lemma neg_atomic_phi_atomic : neg_atomic _ ∼φ → atomic _ φ := begin
 end 
 
 /- If a formula is an atomic formula or the negation of an atomic formula -/
+attribute [simp]
 def literal : formula L → Prop 
 | F                  := true
 | (t₁ ≃ t₂)          := true
@@ -84,8 +87,24 @@ def literal : formula L → Prop
 | ∼φ                 := atomic _ φ
 | _                  := false
 
+/- If a formula is the conjunction of two atomic formulas -/
+attribute [simp]
+def conj_atomic := ∃ φ₁ φ₂ : formula L, φ = (φ₁ and φ₂)  ∧ atomic _ φ₁ ∧ atomic _ φ₂
+
+/- If a formula is the disjunction of two negative atomic formulas -/
+attribute [simp]
+def disj_neg_atomic := ∃ φ₁ φ₂ : formula L, φ = (∼φ₁ or ∼φ₂) ∧ atomic _ φ₁ ∧ atomic _ φ₂
+
+/- If a formula is the conjunction of an atomic formula with a negative atomic formulas -/
+attribute [simp]
+def conj_atomic_neg_atomic := ∃ φ₁ φ₂ : formula L, φ = (φ₁ and ∼φ₂) ∧ atomic _ φ₁ ∧ atomic _ φ₂
+
+/- If a formulas is the conjunction of a negative atomic formulas with an atomic formula -/
+attribute [simp]
+def conj_neg_atomic_atomic := ∃ φ₁ φ₂ : formula L, φ = (∼φ₁ and φ₂) ∧ atomic _ φ₁ ∧ atomic _ φ₂
+
 /- A literal is either atomic or the negation of an atomic formula -/
-lemma literal_atomic_or_neg_atomic :
+lemma lit_atomic_or_neg_atomic :
     literal _ φ ↔ (∃ ψ : formula L, (atomic _ ψ) ∧ (φ = ψ ∨ φ = ∼ψ)) := begin
   split,
   intro lit,
@@ -148,7 +167,7 @@ lemma literal_atomic_or_neg_atomic :
 end
 
 /- Atomics are literals -/
-def atomic_literal : atomic _ φ → literal _ φ := begin
+def atomic_lit : atomic _ φ → literal _ φ := begin
   intros h,
   have lit : (∃ ψ : formula L, (atomic _ ψ) ∧ (φ = ψ ∨ φ = ∼ψ)) := begin
     existsi φ,
@@ -156,11 +175,11 @@ def atomic_literal : atomic _ φ → literal _ φ := begin
     assumption,
     simp,
   end,
-  apply (literal_atomic_or_neg_atomic _ φ).mpr lit,
+  apply (lit_atomic_or_neg_atomic _ φ).mpr lit,
 end
 
 /- Negations of atomics are literals -/
-def neg_atomic_literal : atomic _ φ → literal _ ∼φ := begin
+def neg_atomic_lit : atomic _ φ → literal _ ∼φ := begin
   intros h,
   have lit : (∃ ψ : formula L, (atomic _ ψ) ∧ (∼φ = ψ ∨ ∼φ = ∼ψ)) := begin
     existsi φ,
@@ -168,23 +187,82 @@ def neg_atomic_literal : atomic _ φ → literal _ ∼φ := begin
     assumption,
     simp,
   end,
-  apply (literal_atomic_or_neg_atomic _ ∼φ).mpr lit,
+  apply (lit_atomic_or_neg_atomic _ ∼φ).mpr lit,
 end
 
 /- Take the disjunction of a non-empty list of formulas -/
+attribute [simp]
 def disjunction (φ : formula L) : list (formula L) → formula L
 | list.nil         := φ
-| (list.cons h t)  := h or (disjunction t)
+| (list.cons h t)  := (disjunction t) or h
 
-prefix ` Or `:120 := disjunction _
+notation ` Disj `:120 := disjunction _
 
-def conjunction (φ : formula L) : list (formula L) → formula L
-| list.nil         := φ
-| (list.cons h t)  := h and (conjunction t)
+attribute [simp]
+def disj_nil : (Disj φ []) = φ := begin
+  unfold disjunction,
+end
 
-prefix ` And `:120 := conjunction _
+attribute [simp]
+def disj_cons : (Disj φ (h::t)) = ((Disj φ t) or h) := begin
+  unfold disjunction,
+end
+
+def disj_append : (Disj φ₁ (Φ₁ ++ (φ₂::[]) ++ Φ₂)) = ((Disj φ₁ Φ₁) or (Disj φ₂ Φ₂)) := sorry
+
+attribute [simp]
+def or_list (φ : formula L) : list (formula L) → list (formula L)
+| list.nil         := []
+| (list.cons h t)  := ((φ or h)::(or_list t))
+
+notation φ` or⬝ `Φ := or_list _ φ Φ
+
+attribute [simp]
+def or_list_nil : (φ or⬝ []) = [] := by simp
+
+attribute [simp]
+def or_list_cons : (φ or⬝ (h::t)) = ((φ or h)::(φ or⬝ t)) := by simp
 
 /- The conjunction of a non-empty list of formulas -/
+attribute [simp]
+def conjunction (φ : formula L) : list (formula L) → formula L
+| list.nil         := φ
+| (list.cons h t)  := (conjunction t) and h
+
+notation ` Conj `:120 := conjunction _
+
+attribute [simp]
+def conj_nil : (Conj φ []) = φ := by simp
+
+attribute [simp]
+def conj_cons : (Conj φ (h::t)) = ((Conj φ t) and h) := by simp
+
+attribute [simp]
+def and_list (φ : formula L) : list (formula L) → list (formula L)
+| list.nil         := []
+| (list.cons h t)  := ((φ and h)::(and_list t))
+
+notation φ` and⬝ `Φ := and_list _ φ Φ
+
+attribute [simp]
+def and_list_nil : (φ and⬝ list.nil) = list.nil := by simp
+
+attribute [simp]
+def and_list_cons : (φ and⬝ (list.cons h t)) = ((φ and h)::(φ and⬝ t)) := by simp
+
+/- If a formula is the conjunction of literals -/
+attribute [simp]
+def conj_lit (φ : formula L) := 
+    (∃ q : (formula L), ∃ Q : list (formula L),
+     φ = Conj q Q ∧ literal _ q ∧ ∀ q' ∈ Q, literal _ q')
+
+/- If a formula is the disjunction of conjunction of literals -/
+attribute [simp]
+def disj_conj_lit (φ : formula L) :=
+    (∃ p : (formula L), ∃ P : list (formula L), 
+      (φ = Disj p P) ∧ 
+      (conj_lit _ p) ∧ 
+      (∀ p' ∈ P, conj_lit _ p'))
 
 /- If a variable occurs in a term -/
 def occurs_in_term (n : ℕ) : term L → Prop
@@ -216,6 +294,7 @@ def quantifier_free : formula L → Prop
 | _                  := true
 
 /-- If a propositional logic formula is in disjunctive normal form -/
+attribute [simp]
 def dnf_prop : formula L → Prop
 | ∼φ                 := match φ with
                         | F                 := true
@@ -230,6 +309,7 @@ def dnf_prop : formula L → Prop
 | _                  := true
 
 /-- If a first order logic formula is in disjunctive normal form -/
+attribute [simp]
 def dnf : formula L → Prop
 | (all n φ)         := dnf φ
 | φ                 := dnf_prop _ φ

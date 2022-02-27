@@ -29,7 +29,7 @@ notation ` ▸ `φ := Prf list.nil φ
 
 variables {p p₁ p₂ q q₁ q₂ r s : formula L}
 
-variables {Γ γ : list (formula L)}
+variables {Γ γ P Q : list (formula L)}
 
 -- If a set of axioms is consistent
 def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
@@ -462,6 +462,45 @@ def DistributionOrAnd_ : (p or (q and r)) ▸ ((p or q) and (p or r)) := begin
 def DistributionOrAnd_R : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or r)) := To_Right_Rule DistributionOrAnd_
 
 def DistributionOrAnd_L : Γ ▸ (p or (q and r)) → (((p or q) and (p or r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAnd_
+
+def DistributionAndDisj_ : (p and (Disj q Q)) ▸ (Disj (p and q) (p and⬝ Q)) := begin
+  induction Q,
+  repeat { simp },
+  apply Axiom 0, refl,
+  apply DistributionAndOr_L,
+  apply Axiom 0, refl,
+  apply Or_elim,
+  apply Axiom 0, refl,
+  apply Or_intro_left,
+  apply Axiom 0, refl,
+  apply Or_intro_right,
+  apply To_Left_Rule Q_ih,
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+end
+
+def DistributionAndDisj_R : Γ ▸ (p and (Disj q Q)) → Γ ▸ (Disj (p and q) (p and⬝ Q)) := To_Right_Rule DistributionAndDisj_
+
+def DistributionAndDisj_L : Γ ▸ (p and (Disj q Q)) → ((Disj (p and q) (p and⬝ Q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DistributionAndDisj_
+
+def DistributionOrConj_ : (p or (Conj q Q)) ▸ (Conj (p or q) (p or⬝ Q)) := begin
+  induction Q,
+  repeat { simp },
+  apply Axiom 0, refl,
+  apply DistributionOrAnd_L,
+  apply Axiom 0, refl,
+  apply And_intro,
+  apply And_elim_left_L,
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+  apply To_Right_Rule Q_ih,
+  apply And_elim_right_R,
+  apply Axiom 0, refl,
+end
+
+def DistributionOrConj_R : Γ ▸ (p or (Conj q Q)) → Γ ▸ (Conj (p or q) (p or⬝ Q)) := To_Right_Rule DistributionOrConj_
+
+def DistributionOrConj_L : Γ ▸ (p or (Conj q Q)) → ((Conj (p or q) (p or⬝ Q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DistributionOrConj_
 
 -- Commutativity rules 
 def Or_comm_ : (p or q) ▸ (q or p) := sorry
