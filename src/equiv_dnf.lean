@@ -70,6 +70,9 @@ end
 attribute [simp]
 def equiv_disj_conj_lit (φ : formula L) := ∃ ψ : formula L, (disj_conj_lit _ ψ) ∧ (Γ ▸ φ ↔ Γ ▸ ψ)
 
+/- A formula which is a disjunction of conjunction of literals is equivalent to a disjunction of conjunction of literals -/
+def disj_conj_lit_equiv_disj_conj_lit : disj_conj_lit _ φ → equiv_disj_conj_lit _ Γ φ := sorry
+
 /- A formula is equivalent to a formula in dnf if and only if it is equivalent to a formula which is
    a disjunction of conjunctions of literals -/
 lemma equiv_dnf_iff_equiv_disj_conj_lit : equiv_dnf _ Γ φ ↔ equiv_disj_conj_lit _ Γ φ := begin
@@ -92,8 +95,31 @@ lemma equiv_dnf_iff_equiv_disj_conj_lit : equiv_dnf _ Γ φ ↔ equiv_disj_conj_
 end
 
 /- The conjunction of disjunctions of conjunctions of literals is equivalent to a conjunction of disjunctions of literals -/
-lemma conj_of_disj_conj_lit_equiv_disj_conj_lit : disj_conj_lit _ φ₁ → disj_conj_lit _ φ₂ → equiv_disj_conj_lit _  Γ (φ₁ and φ₂) := begin
+lemma conj_disj_conj_lit_equiv_disj_conj_lit : disj_conj_lit _ φ₁ → disj_conj_lit _ φ₂ → equiv_disj_conj_lit _  Γ (φ₁ and φ₂) := begin
   intros φ₁dcl φ₂dcl,
+  apply exists.elim φ₁dcl,
+  intros p₁ h₁',
+  apply exists.elim h₁',
+  intros P₁ h₁,
+  apply exists.elim φ₂dcl,
+  intros p₂ h₂',
+  apply exists.elim h₂',
+  intros P₂ h₂,  
+  induction P₁,
+  induction P₂,
+  simp at h₁ h₂,
+  have p₁conj_lit : conj_lit _ p₁ := and.elim_right h₁,
+  have p₂conj_lit : conj_lit _ p₂ := and.elim_right h₂,
+  apply disj_conj_lit_equiv_disj_conj_lit,
+  apply conj_lit_disj_conj_lit,
+  apply conj_conj_lit_conj_lit,
+  rw and.elim_left h₁,
+  assumption,
+  rw and.elim_left h₂,
+  assumption,
+  simp at h₁ h₂,
+  admit,
+  admit,
 end
 
 /- And case of dnf with one bad connective -/
@@ -103,7 +129,7 @@ lemma and_bc_eq_one_equiv_dnf : (dnf_bad_connectives _ (φ₁ and φ₂) = 1) �
   have φ₁dcl : disj_conj_lit _ φ₁ := (dnf_iff_disj_conj_lit _ _).mp (and.elim_left φ₁φ₂dnf),
   have φ₂dcl : disj_conj_lit _ φ₂ := (dnf_iff_disj_conj_lit _ _).mp (and.elim_right φ₁φ₂dnf),
   have φ₁aφ₂equiv_dcl : equiv_disj_conj_lit _ Γ (φ₁ and φ₂) := 
-    by  { apply conj_of_disj_conj_lit_equiv_disj_conj_lit, repeat { assumption }, },
+    by  { apply conj_disj_conj_lit_equiv_disj_conj_lit, repeat { assumption }, },
   apply (equiv_dnf_iff_equiv_disj_conj_lit _ _ _).mpr,
   assumption,
 end
@@ -163,39 +189,52 @@ lemma or_bc_eq_one_equiv_dnf : dnf_bad_connectives _ (φ₁ or φ₂) = 1 →
 end
 
 /- All case of dnf with one bad connective -/
-lemma all_bc_eq_one_equiv_dnf : ∀ n : ℕ, dnf_bad_connectives _ (formula.all n φ) = 1 →
-                                  equiv_dnf _ Γ (formula.all n φ) := sorry
+lemma all_bc_eq_one_equiv_dnf : ∀ n : ℕ, dnf_bad_connectives _ (formula.all n φ) = 1 → 
+    equiv_dnf _ Γ (formula.all n φ) := sorry
 
-theorem for_all_equiv_dnf :  equiv_dnf _ Γ φ := begin
-  have h : ∃ n, dnf_bad_connectives _ φ = n := begin existsi dnf_bad_connectives _ φ, refl, end,
-  apply exists.elim h,
-  intros n nh,
-  induction n,
-  -- Case 1: No bad connectives
-  apply dnf_equiv_dnf _ Γ φ,
-  apply bc_eq_zero_dnf _ φ nh,
-  induction n_n,
+/- If φ has one bad connective, then is it equivalent to a formula in dnf -/
+theorem bc_eq_one_equiv_dnf : dnf_bad_connectives _ φ = 1 → equiv_dnf _ Γ φ := begin
+  intro bc,
   -- Case 2: Exactly one bad connective, induct on φ
   induction φ,
-  -- The first three cases are the same
   -- Case 2a : Trivial cases
   any_goals { by { apply dnf_equiv_dnf, simp } },
   -- Case 2b : Not case
-  apply not_bc_eq_one_equiv_dnf, apply nh,
+  apply not_bc_eq_one_equiv_dnf _ _ _ bc,
   -- Case 2c : Or case
-  apply or_bc_eq_one_equiv_dnf, apply nh,
+  apply or_bc_eq_one_equiv_dnf _ _ _ _ bc,
   -- Case 2d : All case
-  apply all_bc_eq_one_equiv_dnf, apply nh,
+  apply all_bc_eq_one_equiv_dnf _ _ _ _ bc,
+end
+
+theorem for_all_equiv_dnf : equiv_dnf _ Γ φ := begin
+  have h : ∃ n, dnf_bad_connectives _ φ = n := begin existsi dnf_bad_connectives _ φ, refl, end,
+  apply exists.elim h,
+  intros n bc,
+  induction n,
+  -- Case 1: No bad connectives
+  apply dnf_equiv_dnf _ Γ φ,
+  apply bc_eq_zero_dnf _ φ bc,
+  induction n_n,
+  -- Case 2: Exactly one bad connective
+  apply bc_eq_one_equiv_dnf, assumption,
   -- Case 3 : Inductive step: more than one bad connective
   induction φ,
   -- Case 3a : Trivial cases
   any_goals { by { apply dnf_equiv_dnf, simp } },
   -- Case 3b : Not case
-  admit,
+  have φequiv_dnf : equiv_dnf _ Γ φ_ᾰ := sorry,
+  have bc_eq_one : dnf_bad_connectives _ ∼φ_ᾰ = 1 := sorry,
+  apply bc_eq_one_equiv_dnf, assumption,
   -- Case 3c : Or case
-  admit,
+  have φ₁equiv_dnf : equiv_dnf _ Γ φ_ᾰ := sorry,
+  have φ₂equiv_dnf : equiv_dnf _ Γ φ_ᾰ_1 := sorry,
+  have bc_eq_one : dnf_bad_connectives _ (φ_ᾰ or φ_ᾰ_1) = 1 := sorry,
+  apply bc_eq_one_equiv_dnf, assumption,
   -- Case 3d : All case
-  admit,
+  have φequiv_dnf : equiv_dnf _ Γ φ_ᾰ_1 := sorry,
+  have bc_eq_one : dnf_bad_connectives _ (formula.all φ_ᾰ φ_ᾰ_1) = 1 := sorry,
+  apply bc_eq_one_equiv_dnf, assumption,
 end
 
 end formula

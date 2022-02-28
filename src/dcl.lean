@@ -151,6 +151,9 @@ lemma neg_disj_conj_lit_phi_atomic_or_disj_neg_atomic : disj_conj_lit _ ∼φ �
   admit,
 end
 
+/- If φ₁ and φ₂ are conjunctions of literals then (φ₁ and φ₂) is conjunction of literals -/
+lemma conj_conj_lit_conj_lit : conj_lit _ φ₁ → conj_lit _ φ₂ → conj_lit _ (φ₁ and φ₂) := sorry
+
 /- If (φ₁ or φ₂) is a disjunction of conjunction of literals then φ₁ and φ₂ are disjuctions of conjunctions of literals -/
 lemma or_disj_conj_lit_phi_conj_lit : disj_conj_lit _ (φ₁ or φ₂) → disj_conj_lit _ φ₁ ∧ disj_conj_lit _ φ₂ := begin
   intro dcl,
@@ -164,6 +167,9 @@ lemma or_disj_conj_lit_phi_conj_lit : disj_conj_lit _ (φ₁ or φ₂) → disj_
   admit,
   admit,
 end
+
+/- If φ₁ and φ₂ are disjunctions of conjunctions of literals then (φ₁ or φ₂) is a disjunction of conjunctions of literals -/
+lemma disj_disj_conj_lit_disj_conj_lit : disj_conj_lit _ φ₁ → disj_conj_lit _ φ₂ → disj_conj_lit _ (φ₁ or φ₂) := sorry
 
 /- A formula is in dnf if and only if it is a disjunction of conjunctions of literals -/
 theorem dnf_iff_disj_conj_lit : dnf _ φ ↔ disj_conj_lit _ φ := begin

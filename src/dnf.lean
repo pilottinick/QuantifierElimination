@@ -47,10 +47,28 @@ def neg_atomic_dnf : atomic _ φ → dnf _ ∼φ := begin
 end
 
 /- A conjunction of two atomic formulas is in dnf -/
-def conj_neg_atomic_dnf : conj_atomic _ φ → dnf _ φ := sorry
+def conj_atomic_dnf : conj_atomic _ φ → dnf _ φ := begin
+  intro φconj_atomic,
+  apply exists.elim φconj_atomic,
+  intros φ₁ h',
+  apply exists.elim h',
+  intros φ₂ h,
+  rw and.elim_left h,
+  simp,
+  apply and.elim_right h,
+end
 
 /- The negative of a disjunction of two negative atomic formulas is in dnf -/
-def disj_neg_atomic_neg_dnf : disj_neg_atomic _ φ → dnf _ ∼φ := sorry
+def disj_neg_atomic_neg_dnf : disj_neg_atomic _ φ → dnf _ ∼φ := begin
+  intro φdisj_neg_atomic,
+  apply exists.elim φdisj_neg_atomic,
+  intros φ₁ h',
+  apply exists.elim h',
+  intros φ₂ h,
+  rw and.elim_left h,
+  simp,
+  apply and.elim_right h,
+end
 
 /- A literal is in dnf -/
 def literal_dnf_prop : literal _ φ → dnf_prop _ φ := begin
@@ -92,16 +110,18 @@ def bc_eq_zero_dnf : dnf_bad_connectives _ φ = 0 → dnf _ φ := begin
   contrapose,
   induction φ,
   any_goals { by { intro h, simp, apply h true.intro } },
-  have lem : ∀ x, ¬(x + 1) = 0 := nat.succ_ne_zero,
-  repeat {  
-    intros h1 h2,
-    simp at h2,
-  },
-  have c : dnf_bad_connectives L φ_ᾰ + 1 = 0 := sorry,
+  intro nφdnf,
+  unfold dnf_bad_connectives,
+  simp,
+  intro h,
+  simp at nφdnf, 
   contradiction,
-  have c : dnf_bad_connectives L φ_ᾰ + dnf_bad_connectives L φ_ᾰ_1 + 1 = 0 := sorry,
-  contradiction,
-  have c : dnf_bad_connectives L φ_ᾰ_1 + 1 = 0 := sorry,
+  simp,
+  intros h1 h2 h3 h4,
+  apply h1 h4,
+  simp,
+  intros h1 h2,
+  let h := φ_ih h1,
   contradiction,
 end
 
@@ -187,12 +207,16 @@ lemma not_bc_eq_one_phi_dnf : dnf_bad_connectives _ ∼φ = 1 → dnf _ φ := be
   intro bc,
   have h1 : ¬dnf L φ → ¬dnf L ( ∼ φ) := begin contrapose!, apply neg_dnf_phi_dnf end,
   apply by_contra,
-  intro ndnf,
+  intro nφdnf,
   simp at bc,
-  have φbc : dnf_bad_connectives _ φ > 0 := by apply ndnf_bc_ge_one _ _ ndnf,
-  have nφdnf : ¬(dnf _ ∼φ) := h1 ndnf,
-  -- TODO: show contradiction on bc
-  admit,
+  have φbc : dnf_bad_connectives _ φ > 0 := by apply ndnf_bc_ge_one _ _ nφdnf,
+  have nφdnf : ¬(dnf _ ∼φ) := h1 nφdnf,
+  have ite_h : ite (dnf L ( ∼ φ)) 0 1 = 1 := begin
+    simp,
+    intro h,
+    contradiction,
+  end,
+  linarith,
 end
 
 /- If a formula ∼∼φ has one bad connective then φ is in dnf -/
@@ -221,17 +245,14 @@ lemma and_bc_eq_one_phi_dnf : (dnf_bad_connectives _ (φ₁ and φ₂) = 1) → 
   apply or.elim φ₂em,
   intros φ₂dnf φ₁dnf,
   apply and.intro φ₁dnf φ₂dnf,
-  all_goals { 
-    repeat {
-      apply or.elimφ₂em
-      <|>
-      apply and.intro φ₁dnf φ₂dnf,
-      intros φ₂dnf φ₁dnf,
-      simp at bc
-      -- TODO: show contradiction on bc 
-    } 
-  },
-  repeat { admit },
+  intros nφ₂dnf φ₁dnf,
+  split,
+  assumption,
+  have : dnf_bad_connectives L (φ₁ and φ₂) > 1 := sorry,
+  linarith,
+  intro nφ₁dnf,
+  have : dnf_bad_connectives L (φ₁ and φ₂) > 1 := sorry,
+  linarith,
 end                      
 
 /- If a formula (φ₁ or φ₂) is in dnf then φ₁ φ₂ are in dnf -/
@@ -253,17 +274,14 @@ lemma or_bc_eq_one_phi_dnf : (dnf_bad_connectives _ (φ₁ or φ₂) = 1) →
   apply or.elim φ₂em,
   intros φ₂dnf φ₁dnf,
   apply and.intro φ₁dnf φ₂dnf,
-  all_goals { 
-    repeat {
-      apply or.elimφ₂em
-      <|>
-      apply and.intro φ₁dnf φ₂dnf,
-      intros φ₂dnf φ₁dnf,
-      simp at bc
-      -- TODO: show contradiction on bc 
-    } 
-  },
-  repeat { admit },
+  intros nφ₂dnf φ₁dnf,
+  split,
+  assumption,
+  have : dnf_bad_connectives L (φ₁ or φ₂) > 1 := sorry,
+  linarith,
+  intro nφ₁dnf,
+  have : dnf_bad_connectives L (φ₁ or φ₂) > 1 := sorry,
+  linarith,
 end 
 
 /- If a formula (all n φ) is in dnf then φ is in dnf -/
@@ -311,8 +329,6 @@ lemma dnf_neg_dnf_or_bc_eq_one : dnf _ φ → ((dnf _ ∼φ) ∨ (dnf_bad_connec
   unfold ite,
   have bc : dnf_bad_connectives L φ = 0 := dnf_bc_eq_zero _ _ h,
   rw bc,
-  ring_nf,
-  -- TODO: How do I apply dnf to simplify decidable.rec?
   admit,
 end
 

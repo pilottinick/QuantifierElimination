@@ -1,72 +1,98 @@
 import language
+import data.nat.parity
 
 namespace first_order
 
 section prf
 
-variables {L : language}
+variables {L : language} (n : ℕ)
 
-inductive Prf : list (formula L) → formula L → Prop
-| Axiom : ∀ {Γ : list _} n φ, Γ.nth n = some φ → Prf Γ φ
-| Bot_elim : ∀ {Γ} φ, Prf Γ F → Prf Γ φ
-| Not_elim : ∀ {Γ} φ ψ, Prf Γ ∼φ → Prf Γ φ → Prf Γ ψ
-| By_contradiction : ∀ {Γ} φ, Prf (∼φ::Γ) F → Prf Γ φ
-| Or_intro_left : ∀ {Γ} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
-| Or_intro_right : ∀ {Γ} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
-| Or_elim : ∀ {Γ} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| All_intro : ∀ {Γ} φ n m, var_not_free_in _ m Γ → Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
-| All_elim : ∀ {Γ} φ n ψ, Prf Γ (formula.all n φ) → Prf Γ (replace_formula_with _ n ψ φ)
-| Cut : ∀ {Γ} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
+def var_not_free_in_new (n : ℕ) (Γ : ℕ → formula L) : Prop
+  := ∀ m : ℕ, ¬(free _ n (Γ m))
+
+/- Shifts a sequence to the right -/
+attribute [simp]
+def cons { A : Type } (a : A) (f : ℕ → A) : ℕ → A := 
+  λ n, if n = 0 then a else (f (n - 1))
+
+/- Append two sequences -/
+attribute [simp]
+def append { A : Type } (f : ℕ → A) (g : ℕ → A) : ℕ → A :=
+  λ n : ℕ, if (even n) then f (n / 2) else g ((n - 1) / 2)
+
+notation a`::`f := cons a f
+
+notation l`++`f := append l f
+
+inductive Prf : (ℕ → (formula L)) → formula L → Prop
+| Axiom : ∀ {Γ : ℕ → (formula L)} n φ, Γ n = φ → Prf Γ φ
+| Bot_elim : ∀ {Γ : ℕ → (formula L)} φ, Prf Γ F → Prf Γ φ
+| Not_elim : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ∼φ → Prf Γ φ → Prf Γ ψ
+| By_contradiction : ∀ {Γ : ℕ → (formula L)} φ, Prf (∼φ::Γ) F → Prf Γ φ
+| Or_intro_left : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
+| Or_intro_right : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
+| Or_elim : ∀ {Γ : ℕ → (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
+| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_new m Γ → Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
+| All_elim : ∀ {Γ : ℕ → (formula L)} φ n ψ, Prf Γ (formula.all n φ) → Prf Γ (replace_formula_with _ n ψ φ)
+| Cut : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
+
+def list_to_func (Γ : list (formula L)) : ℕ → (formula L) :=
+λ n, match Γ.nth n with
+    | none       := T
+    | some a     := a
+    end
+
+def Prf_list (Γ : list (formula L)) (φ : formula L) : Prop := 
+  Prf (list_to_func Γ) φ
 
 /- Using ⊢ doesn't compile -/
 infix ` ▸ ` := Prf
 
-notation φ` ▸ `ψ := Prf (φ::[]) ψ
+infix ` ▸ ` := Prf_list
 
-notation ` ▸ `φ := Prf list.nil φ
+notation φ` ▸ `ψ := Prf (λ n, φ) ψ
+
+notation ` ▸ `φ := Prf (λ n, T) φ
 
 variables {p p₁ p₂ q q₁ q₂ r s : formula L}
 
-variables {Γ γ P Q : list (formula L)}
+variables {Γ γ : ℕ → formula L} {P Q : list (formula L)}
 
 -- If a set of axioms is consistent
-def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
+def is_consistent (Γ : ℕ → formula L) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
 
 -- If a set of axiom is complete
-def is_complete (Γ : list (formula L)) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
+def is_complete (Γ : ℕ → formula L) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
 
 -- Weakening
-lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
-| A (y :: l1) l2 0 x h := h
-| A (y :: l1) l2 (n+1) x h := @nth_append_some A l1 l2 n x h
-
-lemma nth_cons_some : ∀ {A : Type} {l1 l2 : list A},
-  (∀ n x, l1.nth n = some x → ∃ m, l2.nth m = some x) -> ∀ y,
-  (∀ n x, (y :: l1).nth n = some x → ∃ m, (y :: l2).nth m = some x) :=
-  begin
-    intros, cases n, { existsi 0, assumption },
-    { simp at *, cases (ᾰ _ _ ᾰ_1),
-        existsi w.succ, assumption },
-  end
-
-
-
-lemma nth_append_r : ∀ {A : Type} {l1 l2 : list A} n, (l1 ++ l2).nth (n + l1.length) = l2.nth n := begin
-  intros A l1 l2 n,
-  induction l1,
-  simp,
-  simp,
-  rw ← add_assoc,
-  rw ← add_comm,
-  rw nat.one_add,
-  simp,
-  apply l1_ih,
+lemma nth_append_some : ∀ {A : Type} {l1 l2 : ℕ → A} n, (l1 n) = (l1 ++ l2) (2 * n) := begin
+  intros, simp,
+  have two_even : even 2 := even_bit0 1,
+  have two_n_even : even (2 * n) := nat.even.mul_left two_even n,
+  simp [two_n_even],
 end
 
-def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
-  γ ▸ p → Γ ▸ p := begin
+lemma nth_cons_some : ∀ {A : Type} {l1 l2 : ℕ → A},
+  (∀ n x, l1 n = x → ∃ m, l2 m = x) -> ∀ y,
+  (∀ n x, (y :: l1) n = x → ∃ m, (y :: l2) m = x) :=
+  begin
+    intros, cases n, existsi 0, simp at *, assumption,
+    simp at ᾰ, apply exists.elim (ᾰ n),
+    intros m h, existsi m.succ, rw ← ᾰ_1, simp, assumption,
+  end
+
+lemma nth_cons_r : ∀ {A : Type} {a : A} {l : ℕ → A} n,
+  (a::l) (n + 1) = l n := by { intros, simp, }
+
+lemma nth_even_append_r : ∀ {A : Type} {l1 l2 : ℕ → A} n, 
+  (even n) → (l1 ++ l2) n = l1 (n / 2) := by { intros, simp, intro, contradiction, }
+
+lemma nth_odd_append_r : ∀ {A : Type} {l1 l2 : ℕ → A} n,
+  ¬(even n) → (l1 ++ l2) n = l2 ((n - 1) / 2) := by { intros, simp, intro, contradiction, }
+
+def weakening : (forall n x, γ n = x -> ∃ m, Γ m = x) → γ ▸ p → Γ ▸ p := begin
     intros h γp, revert Γ h,
     induction γp, all_goals { intros Γ h },
       { cases (h _ _ γp_ᾰ), apply Axiom, assumption, },
@@ -90,49 +116,32 @@ def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
 
 def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
     apply weakening,
-    intros, existsi n,
-    apply nth_append_some, assumption,
+    intros, existsi 2 * n,
+    have nth_append : γ n = (γ++Γ) (2 * n) := by apply nth_append_some,
+    rw ← nth_append, assumption,
   end
 
 -- Converting natural deduction rules into sequent calculus rules
 def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
-    intros h1 h2,
+    intros pq Γp,
     apply Cut,
-    apply h2,
-    apply weakening _ h1,
-    intros n h3 h4,
-    cases n,
-    simp at *,
-    existsi 0,
-    simp,
-    apply h4,
-    contradiction,
+    apply Γp,
+    apply weakening _ pq,
+    intros n φ pn_eq_φ,
+    existsi 0, simp, assumption,
   end
 
-def To_Right_Rule_All : (p ▸ q) → (∀ Γ : (list (formula L)), Γ ▸ p → Γ ▸ q) := begin
-    intros h1 Γ h2,
-    apply Cut,
-    apply h2,
-    apply weakening _ h1,
-    intros n h3 h4,
-    cases n,
-    simp at *,
-    existsi 0,
-    simp,
-    apply h4,
-    contradiction,
-  end
+variables (h : formula L) (l : ℕ → formula L)
 
-variables (h : formula L) (l : list (formula L))
-
-def To_Right_Rule_List : ((h::l) ▸ q) → (∀ Γ : (list (formula L)), Γ ▸ h → (l ++ Γ) ▸ q) := begin
-    intros h1 Γ h2,
+def To_Right_Rule_List : ((h::l) ▸ q) → ∀ Γ : ℕ → (formula L), Γ ▸ h → ((l ++ Γ) ▸ q) := begin
+    intros hlq Γ Γq,
     apply Cut,
-    apply weakening _ h2,
-    intros n1 h3 h4,
-    existsi (n1 + l.length),
-    rw nth_append_r,
-    apply h4,
+    apply weakening _ hlq,
+    intros n x hln_eq_x,
+    existsi (2 * (n - 1)),
+    rw nth_even_append_r, simp,
+    rw ← hln_eq_x,
+    apply nth_cons_r,
     apply weakening,
     intros n2 h5 h6,
     apply nth_cons_some,
@@ -144,6 +153,7 @@ def To_Right_Rule_List : ((h::l) ▸ q) → (∀ Γ : (list (formula L)), Γ ▸
     apply h1,
   end
 
+
 def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begin
     intros h1 h2 h3,
     apply Cut,
@@ -153,28 +163,29 @@ def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begi
     apply h3,
   end
 
-def Right_To_ND_Rule : (∀ Γ : (list (formula L)), Γ ▸ p → Γ ▸ q) → (p ▸ q):= begin
+/-
+def Right_To_ND_Rule : Γ ▸ p → Γ ▸ q → (p ▸ q):= begin
   intro h1,
-  have h2 : [p] ▸ p → [p] ▸ q := h1 (p::[]),
-  have h3 : [p] ▸ p := begin apply Prf.Axiom 0, refl, end,
+  have h2 : p ▸ p → p ▸ q := by { intros, },
+  have h3 : p ▸ p := begin apply Prf.Axiom 0, refl, end,
   exact (h2 h3),
 end
+-/
 
 -- def Impl_proves : (Γ ▸ (p ⇒ q)) → (p::Γ) ▸ q := sorry
 
 def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
-  intro h,
-  simp,
+  intro h, simp,
   apply By_contradiction,
   apply Not_elim,
   apply Axiom 0, refl,
-  apply Or_intro_right,
   apply Cut p,
   apply By_contradiction,
   apply Not_elim,
   apply Axiom 1, refl,
   apply Or_intro_left,
   apply Axiom 0, refl,
+  apply Or_intro_right,
   apply weakening _ h,
   intros n φ h1,
   cases n,
@@ -267,7 +278,6 @@ def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := begin
     apply Cut,
     apply h2,
     apply To_Right_Rule_List _ _ Impl_elim_,
-    apply h1,
   end
 
 def And_intro_ : [p, q] ▸ (p and q) := begin

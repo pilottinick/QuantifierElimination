@@ -7,7 +7,7 @@ namespace first_order
 
 section language
 
-/-- Def 1.2.1. -/
+/- Definition of a language -/
 structure language :=
 (functions : ℕ → Type) (relations : ℕ → Type)
 
@@ -72,6 +72,7 @@ def neg_atomic : formula L → Prop
 | ∼φ              := atomic _ φ
 | _               := false
 
+/- If ∼φ is a negative atomic formula then φ is an atomic formula -/
 lemma neg_atomic_phi_atomic : neg_atomic _ ∼φ → atomic _ φ := begin
   intro h,
   unfold neg_atomic at h,
@@ -86,6 +87,12 @@ def literal : formula L → Prop
 | (rel rsymb args)   := true
 | ∼φ                 := atomic _ φ
 | _                  := false
+
+/- If a formula is a series of quantifiers on an atomic formula -/
+attribute [simp]
+def quantified_atomic : formula L → Prop
+| (formula.all n φ)      := quantified_atomic φ
+| φ                      := atomic _ φ
 
 /- If a formula is the conjunction of two atomic formulas -/
 attribute [simp]
@@ -330,7 +337,7 @@ def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 | (φ₁ or φ₂)          := (replace_formula_with φ₁) or (replace_formula_with φ₂)
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
-/-- Def 1.8.3. The term t is substitutable for the variable x in formula φ -/
+/-- The term t is substitutable for the variable x in formula φ -/
 def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 | F                    := true
 | (_ ≃ _)              := true
@@ -339,7 +346,7 @@ def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 | (φ₁ or φ₂)           := (substitutable_for φ₁) ∧ (substitutable_for φ₂)
 | (all y φ)            := ¬(free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (substitutable_for φ))
 
-/-- Def 1.5.3. The sentences of a language -/
+/-- The sentences of a language -/
 def sentence : set (formula L) := λ φ, ∀ n : ℕ, ¬(free L n φ)
 
 end language
@@ -351,17 +358,17 @@ open formula
 
 variables (L : language) (A : Type*)
 
-/-- Def 1.6.1. An L-structure -/
+/- An L-structure -/
 structure Structure :=
 (functions : Π {n : ℕ}, L.functions n → (fin n → A) → A)
 (relations : Π {n : ℕ}, L.relations n → (fin n → A) → Prop)
 
 variable 𝔸 : Structure L A
 
-/-- Def 1.7.1. Variable assignment function into A -/
+/- Variable assignment function into A -/
 def var_assign := ℕ → A
 
-/-- Def 1.7.2. x-modification of the assignment function s -/
+/- x-modification of the assignment function s -/
 def modification_of (s : var_assign A) (x : ℕ) (a : A) : var_assign A :=
   λ (n : ℕ), if n = x then a else s n
 
@@ -370,7 +377,7 @@ notation s `[`x`|`a`]` := modification_of _ s x a
 /-- Term assignment function -/
 def term_assign := term L → A
 
-/-- Def 1.7.3. The term assignment function induced by the variable assignment function s -/
+/- The term assignment function induced by the variable assignment function s -/
 def term_assign_of_s (s : var_assign A) : term_assign L A
 | (v n)                 := s n
 | (func fsymb args)     := 𝔸.functions fsymb (λ n, term_assign_of_s (args n))
@@ -379,10 +386,10 @@ instance : has_coe (var_assign A) (term_assign L A) := ⟨term_assign_of_s _ _ �
 
 notation ` * ` := term_assign_of_s _ _
 
-/-- Variable assignments agree on free variables of a term -/
+/- Variable assignments agree on free variables of a term -/
 def agree_on_free_variables (s₁ s₂ : var_assign A)(t : term L) : Prop := ∀ n : ℕ, occurs_in_term _ n t → s₁ n = s₂ n
 
-/-- Def 1.7.4. A structure 𝔸 satisfies formula φ with assignment s -/
+/- A structure 𝔸 satisfies formula φ with assignment s -/
 def satisfies_with_assignment : var_assign A → formula L → Prop
   | s F                   := false
   | s (t₁ ≃ t₂)           := (* 𝔸 s) t₁ = (* 𝔸 s) t₂
@@ -412,19 +419,19 @@ rw satisfies_with_assignment,
 apply_instance,
 end
 
-/-- A structure 𝔸 satisfies a formula i.e. is a model of the formula -/
+/- A structure 𝔸 satisfies a formula i.e. is a model of the formula -/
 def satisfies_formula (φ : formula L) : Prop := 
   ∀ s : var_assign A, 𝔸 ⊨ φ | s 
 
 notation 𝔸` ⊨ `φ       := satisfies_formula _ _ 𝔸 φ
 
-/-- A structure 𝔸 satisfies a set of formulas -/
+/- A structure 𝔸 satisfies a set of formulas -/
 def satisfies_set_formula (Γ : set (formula L)) : Prop :=
   ∀ φ ∈ Γ, 𝔸 ⊨ φ
 
 notation 𝔸` ⊨ `Γ          := satisfies_set_formula _ _ 𝔸 Γ
 
-/-- Def 1.9.1. Logical implication in a structure -/
+/- Logical implication in a structure -/
 def logically_implies (Δ Γ : set (formula L)) : Prop :=
   ∀ (A : Type*) (𝔸 : Structure L A), (𝔸 ⊨ Δ) → (𝔸 ⊨ Γ)
 
