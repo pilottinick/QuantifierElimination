@@ -28,7 +28,27 @@ inductive term
 
 open term
 
-/-- Def 1.3.3. A formula of a language -/
+/- The variable terms -/
+attribute [simp]
+def var_term : term L → Prop
+| (var _) := true
+| _       := false
+
+/- The constant terms -/
+attribute [simp]
+def cnst_term (t : term L) : Prop := ∃ f : L.functions 0, t = (func f ![])
+
+/- The terms which are either a constant or a variable -/
+attribute [simp]
+def cnst_or_var_term (t : term L) : Prop := cnst_term _ t ∨ var_term _ t
+
+/- The functional terms -/
+attribute [simp]
+def func_term : term L → Prop
+| (func _ _) := true
+| _          := false
+
+/- A formula of a language -/
 inductive formula
 | falsum      : formula
 | eq          : term L → term L → formula
@@ -58,7 +78,19 @@ open formula
 
 variables (φ φ₁ φ₂ h : formula L) (t Φ₁ Φ₂ : list (formula L)) (n : ℕ) 
 
-/- If a formula is an atomic formula -/
+/- Equational formulas -/
+attribute [simp]
+def eq_form : formula L → Prop
+| (_ ≃ _) := true
+| _       := false
+
+/- Relational formulas -/
+attribute [simp]
+def rel_form : formula L → Prop
+| (rel _ _) := true
+| _         := false
+
+/- Atomic formulas -/
 attribute [simp]
 def atomic : formula L → Prop
 | F                := true
@@ -66,20 +98,20 @@ def atomic : formula L → Prop
 | (rel _ _)       := true
 | _               := false
 
-/- If a formula is the negative of an atomic formula -/
+/- Negations of an atomic formulas -/
 attribute [simp]
 def neg_atomic : formula L → Prop
 | ∼φ              := atomic _ φ
 | _               := false
 
-/- If ∼φ is a negative atomic formula then φ is an atomic formula -/
+/- Negations are atomic formulas are negations of atomic formulas  -/
 lemma neg_atomic_phi_atomic : neg_atomic _ ∼φ → atomic _ φ := begin
   intro h,
   unfold neg_atomic at h,
   assumption,
 end 
 
-/- If a formula is an atomic formula or the negation of an atomic formula -/
+/- Literals -/
 attribute [simp]
 def literal : formula L → Prop 
 | F                  := true
@@ -88,13 +120,13 @@ def literal : formula L → Prop
 | ∼φ                 := atomic _ φ
 | _                  := false
 
-/- If a formula is a series of quantifiers on an atomic formula -/
+/- Single quantifiers on an atomic formula -/
 attribute [simp]
 def quantified_atomic : formula L → Prop
-| (formula.all n φ)      := quantified_atomic φ
-| φ                      := atomic _ φ
+| (formula.all _ φ)      := atomic _ φ
+| φ                      := false
 
-/- If a formula is the conjunction of two atomic formulas -/
+/- Conjunctions of two atomic formulas -/
 attribute [simp]
 def conj_atomic := ∃ φ₁ φ₂ : formula L, φ = (φ₁ and φ₂)  ∧ atomic _ φ₁ ∧ atomic _ φ₂
 
@@ -262,6 +294,12 @@ attribute [simp]
 def conj_lit (φ : formula L) := 
     (∃ q : (formula L), ∃ Q : list (formula L),
      φ = Conj q Q ∧ literal _ q ∧ ∀ q' ∈ Q, literal _ q')
+
+/- If a formula is a single quantifier on a conjunction of literals -/
+attribute [simp]
+def quantified_conj_lit : formula L → Prop
+| (formula.all n φ)       := conj_lit _ φ
+| φ                       := false
 
 /- If a formula is the disjunction of conjunction of literals -/
 attribute [simp]

@@ -5,7 +5,7 @@ namespace first_order
 
 section prf
 
-variables {L : language} (n : ℕ)
+variables {L : language} {n : ℕ}
 
 def var_not_free_in_new (n : ℕ) (Γ : ℕ → formula L) : Prop
   := ∀ m : ℕ, ¬(free _ n (Γ m))
@@ -32,8 +32,10 @@ inductive Prf : (ℕ → (formula L)) → formula L → Prop
 | Or_intro_left : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ : ℕ → (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_new m Γ → Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
-| All_elim : ∀ {Γ : ℕ → (formula L)} φ n ψ, Prf Γ (formula.all n φ) → Prf Γ (replace_formula_with _ n ψ φ)
+| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_new m Γ → 
+    Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
+| All_elim : ∀ {Γ : ℕ → (formula L)} φ n ψ, Prf Γ (formula.all n φ) → 
+    Prf Γ (replace_formula_with _ n ψ φ)
 | Cut : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf

@@ -12,25 +12,27 @@
         - Since there is one bad connective, then φ is in dnf
           - See not_bc_eq_one_phi_dnf
         - If φ is atomic then ∼φ is in dnf
-        - If φ is ∼φ₁, then since ∼φ₁ is in dnf it is either the negation of
+        - If φ is ∼∼φ₁, then since ∼φ₁ is in dnf it is either the negation of
           an atomic formula or the conjunction of atomic formulas
           - See neg_dnf_phi_atomic_or_disj_neg_atomic
-          - In either case φ is in dnf
+          - In either case ∼∼φ₁ is equivalent to φ₁ which is in dnf
         - If φ is ∼(φ₁ or φ₂), then since (φ₁ or φ₂) is in dnf then both
           φ₁ and φ₂ are in disjunctive normal form.
-          - By Demorgans laws, φ ≃ ∼φ₁ and ∼φ₂
+          - By Demorgans laws, φ ≃ (∼φ₁ and ∼φ₂)
           - So we reduce to the case where φ = (φ₁ and φ₂) with one bad connective
-        - If the formula is (φ₁ and φ₂), then since there is one bad connective
-          both φ₁ and φ₂ are in dnf
-          - We make use of a theorem characterizing (non-first order) formulas in dnf: a formula 
-            is in dnf if and only if it is a disjunction of conjunctions of literals. 
-            - See dnf_iff_disj_conj_lit
-          - The conjunction of two formulas which are disjunctions of conjunctions of literals is
-            a conjunction of disjunctions of literals
+      - If the formula is (φ₁ and φ₂), then since there is one bad connective
+        both φ₁ and φ₂ are in dnf
+        - We make use of a theorem characterizing (non-first order) formulas in dnf: a formula 
+          is in dnf if and only if it is a disjunction of conjunctions of literals. 
+          - See dnf_iff_disj_conj_lit
+        - The conjunction of two formulas which are disjunctions of conjunctions of literals is
+          a conjunction of disjunctions of literals
+          - See conj_disj_conj_lit_equiv_disj_conj_lit
       - If the formula is (φ₁ or φ₂), then since there is one bad connective 
-        both φ₁ and φ₂ are in
+        both φ₁ and φ₂ are in dnf
         - The disjuction of two formulas which are disjunctions of conjunctions of literals is
           a conjunction of disjunctions of literals
+          - See disj_disj_conj_lit_disj_conj_lit
       - TODO: If the formula is (all n φ)...
     - If there is more than one bad connective, then by induction the subformulas of the
       top-most connective can be written in disjunctive normal form. Now we have reduced to the case
