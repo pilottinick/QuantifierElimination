@@ -58,17 +58,21 @@ open formula
 
 variables (φ φ₁ φ₂ h : formula L) (t Φ₁ Φ₂ : list (formula L)) (n : ℕ) 
 
+section dnf
+
 /- Atomic formulas-/
 inductive atomic
 | falsum       : atomic
 | eq           : term L → term L → atomic 
 | rel {n : ℕ}  : L.relations n → (fin n → term L) → atomic
 
+attribute [simp]
 def atomic_to_formula : atomic L → formula L 
 | atomic.falsum             := formula.falsum
 | (atomic.eq t s)           := formula.eq t s
 | (atomic.rel rsymb args)   := formula.rel rsymb args
 
+attribute [simp]
 instance atomic_to_formula_coe (L : language) :
   has_coe (atomic L) (formula L) :=
   ⟨atomic_to_formula L⟩
@@ -78,10 +82,21 @@ inductive literal
 | atomic      : atomic L → literal
 | neg_atomic  : atomic L → literal
 
+attribute [simp]
+def atomic_to_literal : atomic L → literal L
+| a := literal.atomic a
+
+attribute [simp]
+instance atomic_to_literal_coe (L : language) :
+  has_coe (atomic L) (literal L) :=
+  ⟨atomic_to_literal L⟩
+
+attribute [simp]
 def literal_to_formula : literal L → formula L
 | (literal.atomic a)      := a
 | (literal.neg_atomic na) := na
 
+attribute [simp]
 instance literal_to_formula_coe (L : language) :
   has_coe (literal L) (formula L) :=
   ⟨literal_to_formula L⟩
@@ -91,10 +106,21 @@ inductive conj_lit
 | lit        : literal L → conj_lit 
 | conj       : literal L → literal L → conj_lit
 
+attribute [simp]
+def lit_to_conj_lit : literal L → conj_lit L
+| l := conj_lit.lit l
+
+attribute [simp]
+instance lit_to_conj_lit_coe (L : language) :
+  has_coe (literal L) (conj_lit L) :=
+  ⟨lit_to_conj_lit L⟩
+
+attribute [simp]
 def conj_lit_to_formula : conj_lit L → formula L
 | (conj_lit.lit l)       := l
 | (conj_lit.conj l₁ l₂)  := (l₁ and l₂)
 
+attribute [simp]
 instance conj_lit_to_formula_coe (L : language) :
   has_coe (conj_lit L) (formula L) :=
   ⟨conj_lit_to_formula L⟩
@@ -104,10 +130,21 @@ inductive disj_conj_lit
 | conj_lit   : conj_lit L → disj_conj_lit
 | disj       : conj_lit L → conj_lit L → disj_conj_lit
 
+attribute [simp]
+def conj_lit_to_disj_conj_lit : conj_lit L → disj_conj_lit L
+| cl := disj_conj_lit.conj_lit cl
+
+attribute [simp]
+instance conj_lit_to_disj_conj_lit_coe (L : language) :
+  has_coe (conj_lit L) (disj_conj_lit L) :=
+  ⟨conj_lit_to_disj_conj_lit L⟩
+
+attribute [simp]
 def disj_conj_lit_to_formula : disj_conj_lit L → formula L
 | (disj_conj_lit.conj_lit cl)  := cl
 | (disj_conj_lit.disj cl₁ cl₂)  := (cl₁ or cl₂)
 
+attribute [simp]
 instance disj_conj_lit_to_formula_coe (L : language) :
   has_coe (disj_conj_lit L) (formula L) :=
   ⟨disj_conj_lit_to_formula L⟩
@@ -117,13 +154,17 @@ inductive dnf
 | disj_conj_lit   : disj_conj_lit L → dnf
 | all             : ℕ → dnf → dnf
 
+attribute [simp]
 def dnf_to_formula : dnf L → formula L 
 | (dnf.disj_conj_lit dcl) := dcl
 | (dnf.all n φ)           := (formula.all n (dnf_to_formula φ))
 
+attribute [simp]
 instance dnf_to_formula_coe (L : language) :
   has_coe (dnf L) (formula L) :=
   ⟨dnf_to_formula L⟩
+
+end dnf
 
 /- If a variable occurs in a term -/
 def occurs_in_term (n : ℕ) : term L → Prop
@@ -153,29 +194,6 @@ def quantifier_free : formula L → Prop
 | (φ₁ or φ₂)         := (quantifier_free φ₁) ∧ (quantifier_free φ₂)
 | (all n φ)          := false
 | _                  := true
-
-/-- If a propositional logic formula is in disjunctive normal form -/
-attribute [simp]
-def dnf_prop : formula L → Prop
-| ∼φ                 := match φ with
-                        | F                 := true
-                        | (t₁ ≃ t₂)         := true
-                        | (rel rsymb args)  := true
-                        | ∼φ                := false
-                        | (φ₁ or φ₂)        := neg_atomic _ φ₁ ∧ neg_atomic _ φ₂
-                        | _                 := false
-                        end
-| (φ₁ or φ₂)         := dnf_prop φ₁ ∧ dnf_prop φ₂
-| (all n φ)          := false
-| _                  := true
-
-/-- If a first order logic formula is in disjunctive normal form -/
-attribute [simp]
-def dnf : formula L → Prop
-| (all n φ)         := dnf φ
-| φ                 := dnf_prop _ φ
-
-instance decidable_dnf : decidable (dnf _ φ) := sorry
 
 /-- Def 1.8.1. The term with the variable x replaced by the term t -/
 def replace_term_with (x : ℕ) (t : term L) : term L → term L
