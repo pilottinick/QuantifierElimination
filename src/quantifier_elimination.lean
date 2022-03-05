@@ -7,19 +7,19 @@ section quantifier_elimination
 variables (L : language) (Γ : list (formula L)) (φ ψ : formula L)
 
 /- If a formula φ has has quantifier elimination in a theory -/
-attribute [simp]
+@[simp]
 def qe_form (φ : formula L) := ∃ ψ, (quantifier_free _ ψ) ∧ (Γ ▸ φ ↔ Γ ▸ ψ)
 
 /- If a theory Γ has quantifier elimination -/
-attribute [simp]
+@[simp]
 def qe := ∀ (φ : formula L), (qe_form _ Γ φ)
 
 /- If a theory Γ has quantifier elimination on quantified conjugations of literals -/
-attribute [simp]
+@[simp]
 def qe_quantified_conj_lit := ∀ (φ : formula L), (quantified_conj_lit _ φ) → qe_form _ Γ φ
 
 /- If a theory Γ has quantifier elimination on quantifier free formulas -/
-attribute [simp]
+@[simp]
 def qe_qf := ∀ (φ : formula L), (quantifier_free _ φ) → qe_form _ Γ φ
 
 /- All theories have quantifier elimination on quantifier free formulas -/

@@ -66,7 +66,7 @@ inductive atomic
 | eq           : term L → term L → atomic 
 | rel {n : ℕ}  : L.relations n → (fin n → term L) → atomic
 
-attribute [simp]
+@[simp]
 def atomic_to_formula : atomic L → formula L 
 | atomic.falsum             := formula.falsum
 | (atomic.eq t s)           := formula.eq t s
@@ -77,16 +77,16 @@ inductive literal
 | atomic      : atomic L → literal
 | neg_atomic  : atomic L → literal
 
-attribute [simp]
+@[simp]
 def atomic_to_literal : atomic L → literal L
 | a := literal.atomic a
 
-attribute [simp]
+@[reducible]
 instance atomic_to_literal_coe (L : language) :
   has_coe (atomic L) (literal L) :=
   ⟨atomic_to_literal L⟩
 
-attribute [simp]
+@[simp]
 def literal_to_formula : literal L → formula L
 | (literal.atomic a)      := atomic_to_formula _ a
 | (literal.neg_atomic na) := atomic_to_formula _ na
@@ -96,16 +96,16 @@ inductive conj_lit
 | lit        : literal L → conj_lit 
 | conj       : literal L → literal L → conj_lit
 
-attribute [simp]
+@[simp]
 def lit_to_conj_lit : literal L → conj_lit L
 | l := conj_lit.lit l
 
-attribute [simp]
+@[reducible]
 instance lit_to_conj_lit_coe (L : language) :
   has_coe (literal L) (conj_lit L) :=
   ⟨lit_to_conj_lit L⟩
 
-attribute [simp]
+@[simp]
 def conj_lit_to_formula : conj_lit L → formula L
 | (conj_lit.lit l)       := literal_to_formula _ l
 | (conj_lit.conj l₁ l₂)  := (literal_to_formula _ l₁) and (literal_to_formula _ l₂)
@@ -115,16 +115,16 @@ inductive disj_conj_lit
 | conj_lit   : conj_lit L → disj_conj_lit
 | disj       : conj_lit L → conj_lit L → disj_conj_lit
 
-attribute [simp]
+@[simp]
 def conj_lit_to_disj_conj_lit : conj_lit L → disj_conj_lit L
 | cl := disj_conj_lit.conj_lit cl
 
-attribute [simp]
+@[reducible]
 instance conj_lit_to_disj_conj_lit_coe (L : language) :
   has_coe (conj_lit L) (disj_conj_lit L) :=
   ⟨conj_lit_to_disj_conj_lit L⟩
 
-attribute [simp]
+@[simp]
 def disj_conj_lit_to_formula : disj_conj_lit L → formula L
 | (disj_conj_lit.conj_lit cl)  := conj_lit_to_formula _ cl
 | (disj_conj_lit.disj cl₁ cl₂)  := (conj_lit_to_formula _ cl₁) or (conj_lit_to_formula _ cl₂)
@@ -135,13 +135,22 @@ inductive dnf
 | all             : ℕ → dnf → dnf
 | ex              : ℕ → dnf → dnf
 
-attribute [simp]
+@[simp]
+def disj_conj_lit_to_dnf : disj_conj_lit L → dnf L
+| dcl := dnf.disj_conj_lit dcl
+
+@[reducible]
+instance disj_conj_lit_to_dnf_coe (L : language) :
+  has_coe (disj_conj_lit L) (dnf L) :=
+  ⟨disj_conj_lit_to_dnf L⟩
+
+@[simp]
 def dnf_to_formula : dnf L → formula L 
 | (dnf.disj_conj_lit dcl) := disj_conj_lit_to_formula _ dcl
 | (dnf.all n φ)           := (formula.all n (dnf_to_formula φ))
 | (dnf.ex n φ)            := ∼(formula.all n ∼(dnf_to_formula φ))
 
-attribute [simp]
+@[reducible]
 instance dnf_to_formula_coe (L : language) :
   has_coe (dnf L) (formula L) :=
   ⟨dnf_to_formula L⟩
@@ -236,6 +245,7 @@ def term_assign_of_s (s : var_assign A) : term_assign L A
 | (v n)                 := s n
 | (func fsymb args)     := 𝔸.functions fsymb (λ n, term_assign_of_s (args n))
 
+@[reducible]
 instance : has_coe (var_assign A) (term_assign L A) := ⟨term_assign_of_s _ _ 𝔸⟩
 
 notation ` * ` := term_assign_of_s _ _

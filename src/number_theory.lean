@@ -24,7 +24,7 @@ def NT_succ : language :=
 notation ` zero `  := term.func NT_succ_func.zero ![]
 notation ` succ `x := term.func NT_succ_func.succ ![x]
 
-attribute [simp]
+@[simp]
 def nth_succ (t : term NT_succ) : ℕ → term NT_succ
 | 0            := t
 | (nat.succ n) := succ (nth_succ n)
@@ -41,12 +41,12 @@ def NT_succ_Γ : ℕ → (formula NT_succ) :=
 variables { φ : formula NT_succ } { t : term NT_succ }
 
 /- A term is either zero or a variable -/
-attribute [simp]
+@[simp]
 def zero_or_var (t : term NT_succ) : Prop := 
   t = zero ∨ (∃ n : ℕ, t = term.var n)
 
 /- A term is a number of succs on a zero or a variable -/
-attribute [simp]
+@[simp]
 def succ_zero_or_var (t : term NT_succ) : Prop :=
   ∃ s : term NT_succ,
     ((zero_or_var s) ∧ (∃ n, t = nth_succ s n))
@@ -57,27 +57,6 @@ def NT_succ_terms : ∀ (t : term NT_succ), succ_zero_or_var t := begin
   simp, existsi term.var t,
   split, simp, existsi 0, simp,
   admit,
-end
-
-/- Characterizing the atomic formulas of NT_succ -/
-def NT_succ_atomic : atomic _ φ ↔ 
-    ((φ = F) ∨ 
-    (∃ t s : term NT_succ, succ_zero_or_var t ∧ succ_zero_or_var s ∧ (φ = t ≃ s))) := begin
-  split, intro φatomic,
-  cases φ, 
-  simp, 
-  rename φ_ᾰ φ₁ , rename φ_ᾰ_1 φ₂,
-  have φ₁succ_zero_or_var : succ_zero_or_var φ₁ := NT_succ_terms φ₁,
-  have φ₂succ_zero_or_var : succ_zero_or_var φ₂ := NT_succ_terms φ₂,
-  apply or.intro_right, existsi φ₁, existsi φ₂,
-  repeat { apply and.intro },
-  repeat { assumption }, refl,
-  cases φ_ᾰ,
-  any_goals { by { simp at φatomic, apply false.elim φatomic } },
-  intro h, apply or.elim h,
-  intro f, rw f, simp,
-  intro t, apply exists.elim t, intros t th, apply exists.elim th, intros s sh,
-  rw and.elim_right (and.elim_right sh), simp, 
 end
 
 end NT_succ

@@ -11,12 +11,12 @@ def var_not_free_in_new (n : ℕ) (Γ : ℕ → formula L) : Prop
   := ∀ m : ℕ, ¬(free _ n (Γ m))
 
 /- Shifts a sequence to the right -/
-attribute [simp]
+@[simp]
 def cons { A : Type } (a : A) (f : ℕ → A) : ℕ → A := 
   λ n, if n = 0 then a else (f (n - 1))
 
 /- Append two sequences -/
-attribute [simp]
+@[simp]
 def append { A : Type } (f : ℕ → A) (g : ℕ → A) : ℕ → A :=
   λ n : ℕ, if (even n) then f (n / 2) else g ((n - 1) / 2)
 

@@ -11,6 +11,7 @@ def for_all_equiv_dnf : ∀ φ : formula L, ∃ ψ : dnf L, Γ ▸ φ ↔ Γ ▸
   intro φ,
   induction φ,
   existsi ↑atomic.falsum, 
+  simp,
 end
 
 end dnf
