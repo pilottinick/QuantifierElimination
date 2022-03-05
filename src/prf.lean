@@ -165,16 +165,19 @@ def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begi
     apply h3,
   end
 
-/-
-def Right_To_ND_Rule : Γ ▸ p → Γ ▸ q → (p ▸ q):= begin
-  intro h1,
-  have h2 : p ▸ p → p ▸ q := by { intros, },
-  have h3 : p ▸ p := begin apply Prf.Axiom 0, refl, end,
-  exact (h2 h3),
-end
--/
+def Right_Rule_To_Not_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
 
--- def Impl_proves : (Γ ▸ (p ⇒ q)) → (p::Γ) ▸ q := sorry
+def Right_Rule_To_Left_Or_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
+
+def Right_Rule_To_Right_Or_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
+
+def Right_Rule_To_Or_Rule : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
+
+def Right_Rule_To_Left_And_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
+
+def Right_Rule_To_Right_And_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+
+def Right_Rule_To_And_Rule : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
 
 def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   intro h, simp,
@@ -249,6 +252,8 @@ def Double_negation_intro_ : p ▸ ∼∼p := begin
 def Double_negation_intro_R : Γ ▸ p → Γ ▸ ∼∼p := To_Right_Rule Double_negation_intro_
 
 def Double_negation_intro_L : Γ ▸ p → (∼∼p::Γ) ▸ r → Γ ▸ r := To_Left_Rule Double_negation_intro_
+
+def Double_negation_R : Γ ▸ ∼∼p ↔ Γ ▸ p := sorry
 
 def Top_intro : Γ ▸ T := begin
   apply By_contradiction,
@@ -448,9 +453,13 @@ def DistributionAndOr_ : (p and (q or r)) ▸ ((p and q) or (p and r)) := begin
     apply Axiom 0, refl,
   end
 
-def DistributionAndOr_R : Γ ▸ (p and (q or r)) → Γ ▸ ((p and q) or (p and r)):= To_Right_Rule DistributionAndOr_
+def DistributionAndOrInLeft_R : Γ ▸ (p and (q or r)) → Γ ▸ ((p and q) or (p and r)):= To_Right_Rule DistributionAndOr_
 
-def DistributionAndOr_L : Γ ▸ (p and (q or r)) → (((p and q) or (p and r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOr_
+def DistributionAndOrInLeft_L : Γ ▸ (p and (q or r)) → (((p and q) or (p and r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOr_
+
+def DistributionAndOrOutLeft_R : Γ ▸ ((p and q) or (p and r)) → Γ ▸ (p and (q or r)) := sorry
+
+def DistributionAndOrOutRight_R : Γ ▸ ((p and q) or (r and q)) → Γ ▸ ((p or r) and q) := sorry
 
 def DistributionOrAnd_ : (p or (q and r)) ▸ ((p or q) and (p or r)) := begin
     apply Or_elim,
@@ -471,48 +480,13 @@ def DistributionOrAnd_ : (p or (q and r)) ▸ ((p or q) and (p or r)) := begin
     apply Axiom 0, refl,
   end
 
-def DistributionOrAnd_R : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or r)) := To_Right_Rule DistributionOrAnd_
+def DistributionOrAndInLeft_R : Γ ▸ (p or (q and r)) → Γ ▸ ((p or q) and (p or r)) := To_Right_Rule DistributionOrAnd_
 
-def DistributionOrAnd_L : Γ ▸ (p or (q and r)) → (((p or q) and (p or r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAnd_
+def DistributionOrAndInLeft_L : Γ ▸ (p or (q and r)) → (((p or q) and (p or r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAnd_
 
-def DistributionAndDisj_ : (p and (Disj q Q)) ▸ (Disj (p and q) (p and⬝ Q)) := begin
-  induction Q,
-  repeat { simp },
-  apply Axiom 0, refl,
-  apply DistributionAndOr_L,
-  apply Axiom 0, refl,
-  apply Or_elim,
-  apply Axiom 0, refl,
-  apply Or_intro_left,
-  apply Axiom 0, refl,
-  apply Or_intro_right,
-  apply To_Left_Rule Q_ih,
-  apply Axiom 0, refl,
-  apply Axiom 0, refl,
-end
+def DistributionOrAndOutLeft_R : Γ ▸ ((p or q) and (p or r)) → Γ ▸ (p or (q and r)) := sorry
 
-def DistributionAndDisj_R : Γ ▸ (p and (Disj q Q)) → Γ ▸ (Disj (p and q) (p and⬝ Q)) := To_Right_Rule DistributionAndDisj_
-
-def DistributionAndDisj_L : Γ ▸ (p and (Disj q Q)) → ((Disj (p and q) (p and⬝ Q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DistributionAndDisj_
-
-def DistributionOrConj_ : (p or (Conj q Q)) ▸ (Conj (p or q) (p or⬝ Q)) := begin
-  induction Q,
-  repeat { simp },
-  apply Axiom 0, refl,
-  apply DistributionOrAnd_L,
-  apply Axiom 0, refl,
-  apply And_intro,
-  apply And_elim_left_L,
-  apply Axiom 0, refl,
-  apply Axiom 0, refl,
-  apply To_Right_Rule Q_ih,
-  apply And_elim_right_R,
-  apply Axiom 0, refl,
-end
-
-def DistributionOrConj_R : Γ ▸ (p or (Conj q Q)) → Γ ▸ (Conj (p or q) (p or⬝ Q)) := To_Right_Rule DistributionOrConj_
-
-def DistributionOrConj_L : Γ ▸ (p or (Conj q Q)) → ((Conj (p or q) (p or⬝ Q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DistributionOrConj_
+def DistributionOrAndOutRight_R : Γ ▸ ((p or q) and (r or q)) → Γ ▸ ((p and r) or q) := sorry
 
 -- Commutativity rules 
 def Or_comm_ : (p or q) ▸ (q or p) := sorry
