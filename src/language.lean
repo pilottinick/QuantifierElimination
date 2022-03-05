@@ -72,11 +72,6 @@ def atomic_to_formula : atomic L → formula L
 | (atomic.eq t s)           := formula.eq t s
 | (atomic.rel rsymb args)   := formula.rel rsymb args
 
-attribute [simp]
-instance atomic_to_formula_coe (L : language) :
-  has_coe (atomic L) (formula L) :=
-  ⟨atomic_to_formula L⟩
-
 /- Literals -/
 inductive literal
 | atomic      : atomic L → literal
@@ -93,13 +88,8 @@ instance atomic_to_literal_coe (L : language) :
 
 attribute [simp]
 def literal_to_formula : literal L → formula L
-| (literal.atomic a)      := a
-| (literal.neg_atomic na) := na
-
-attribute [simp]
-instance literal_to_formula_coe (L : language) :
-  has_coe (literal L) (formula L) :=
-  ⟨literal_to_formula L⟩
+| (literal.atomic a)      := atomic_to_formula _ a
+| (literal.neg_atomic na) := atomic_to_formula _ na
 
 /- Conjunctions of literals -/
 inductive conj_lit
@@ -117,13 +107,8 @@ instance lit_to_conj_lit_coe (L : language) :
 
 attribute [simp]
 def conj_lit_to_formula : conj_lit L → formula L
-| (conj_lit.lit l)       := l
-| (conj_lit.conj l₁ l₂)  := (l₁ and l₂)
-
-attribute [simp]
-instance conj_lit_to_formula_coe (L : language) :
-  has_coe (conj_lit L) (formula L) :=
-  ⟨conj_lit_to_formula L⟩
+| (conj_lit.lit l)       := literal_to_formula _ l
+| (conj_lit.conj l₁ l₂)  := (literal_to_formula _ l₁) and (literal_to_formula _ l₂)
 
 /- Disjunctions of conjunctions of literals -/
 inductive disj_conj_lit
@@ -141,23 +126,20 @@ instance conj_lit_to_disj_conj_lit_coe (L : language) :
 
 attribute [simp]
 def disj_conj_lit_to_formula : disj_conj_lit L → formula L
-| (disj_conj_lit.conj_lit cl)  := cl
-| (disj_conj_lit.disj cl₁ cl₂)  := (cl₁ or cl₂)
-
-attribute [simp]
-instance disj_conj_lit_to_formula_coe (L : language) :
-  has_coe (disj_conj_lit L) (formula L) :=
-  ⟨disj_conj_lit_to_formula L⟩
+| (disj_conj_lit.conj_lit cl)  := conj_lit_to_formula _ cl
+| (disj_conj_lit.disj cl₁ cl₂)  := (conj_lit_to_formula _ cl₁) or (conj_lit_to_formula _ cl₂)
 
 /- Disjunctive normal form -/
 inductive dnf
 | disj_conj_lit   : disj_conj_lit L → dnf
 | all             : ℕ → dnf → dnf
+| ex              : ℕ → dnf → dnf
 
 attribute [simp]
 def dnf_to_formula : dnf L → formula L 
-| (dnf.disj_conj_lit dcl) := dcl
+| (dnf.disj_conj_lit dcl) := disj_conj_lit_to_formula _ dcl
 | (dnf.all n φ)           := (formula.all n (dnf_to_formula φ))
+| (dnf.ex n φ)            := ∼(formula.all n ∼(dnf_to_formula φ))
 
 attribute [simp]
 instance dnf_to_formula_coe (L : language) :

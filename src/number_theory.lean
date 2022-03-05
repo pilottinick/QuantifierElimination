@@ -21,7 +21,7 @@ inductive NT_succ_rel : ℕ → Type
 def NT_succ : language :=
   ⟨NT_succ_func, NT_succ_rel⟩
 
-notation ` zero ` := term.func NT_succ_func.zero ![]
+notation ` zero `  := term.func NT_succ_func.zero ![]
 notation ` succ `x := term.func NT_succ_func.succ ![x]
 
 attribute [simp]
