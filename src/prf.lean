@@ -5,9 +5,9 @@ namespace first_order
 
 section prf
 
-variables {L : language} {n : ℕ}
+variables {L : language} {n m : ℕ}
 
-def var_not_free_in_new (n : ℕ) (Γ : ℕ → formula L) : Prop
+def var_not_free_in_axioms (n : ℕ) (Γ : ℕ → formula L) : Prop
   := ∀ m : ℕ, ¬(free _ n (Γ m))
 
 /- Shifts a sequence to the right -/
@@ -32,7 +32,7 @@ inductive Prf : (ℕ → (formula L)) → formula L → Prop
 | Or_intro_left : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ : ℕ → (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_new m Γ → 
+| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_axioms m Γ → 
     Prf Γ (replace_formula_with _ n (term.var m) φ) → Prf Γ (formula.all n φ)
 | All_elim : ∀ {Γ : ℕ → (formula L)} φ n ψ, Prf Γ (formula.all n φ) → 
     Prf Γ (replace_formula_with _ n ψ φ)
@@ -58,7 +58,7 @@ notation φ` ▸ `ψ := Prf (λ n, φ) ψ
 
 notation ` ▸ `φ := Prf (λ n, T) φ
 
-variables {p p₁ p₂ q q₁ q₂ r s : formula L}
+variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
 variables {Γ γ : ℕ → formula L} {P Q : list (formula L)}
 
@@ -165,19 +165,27 @@ def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begi
     apply h3,
   end
 
-def Right_Rule_To_Not_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
+def Right_Rule_To_Not_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
 
-def Right_Rule_To_Left_Or_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
+def Right_Rule_To_Not_Rule_L : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → (∼q::Γ) ▸ r → Γ ▸ r) := sorry
 
-def Right_Rule_To_Right_Or_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
+def Right_Rule_To_Left_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
 
-def Right_Rule_To_Or_Rule : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
+def Right_Rule_To_Right_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
 
-def Right_Rule_To_Left_And_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
+def Right_Rule_To_Or_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
 
-def Right_Rule_To_Right_And_Rule : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+def Right_Rule_To_Left_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
 
-def Right_Rule_To_And_Rule : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
+def Right_Rule_To_Right_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+
+def Right_Rule_To_And_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
+
+def Right_Rule_To_All_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (all n p) → Γ ▸ (all n q)) := sorry
+
+def Right_Rule_To_All_Rule_L : (Γ ▸ p → Γ ▸ q) → ((Γ ▸ (all n p)) → ((all n q)::Γ) ▸ r → Γ ▸ r) := sorry 
+
+def Right_Rule_To_Ex_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (exi n p) → Γ ▸ (exi n q)) := sorry 
 
 def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   intro h, simp,
@@ -412,7 +420,6 @@ def DeMorganOr_R : Γ ▸ (∼p or ∼q) → Γ ▸ ∼(p and q) := To_Right_Rul
 
 def DeMorganOr_L : Γ ▸ (∼p or ∼q) → ((∼(p and q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganOr_
 
--- TODO
 def DeMorganAnd_ : (∼p and ∼q) ▸ ∼(p or q) := begin
   apply By_contradiction,
   apply Double_negation_elim_L,
@@ -515,19 +522,59 @@ end
 
 def Contrapose_R : Γ ▸ (p ⇒ q) → Γ ▸ (∼q ⇒ ∼p) := To_Right_Rule Contrapose_
 
-def Impl_To_Right_Rule : (Γ ▸ (p ⇒ q)) → (Γ ▸ p → Γ ▸ q) := sorry
+def NotAll_ : ∼(all n p) ▸ (exi n ∼p) := begin
+  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R Double_negation_intro_R),
+  apply Axiom 0, refl,
+end
 
-def Right_Rule_Impl : ((Γ ▸ p) → (Γ ▸ q)) → ((Γ ▸ (p ⇒ r)) → (Γ ▸ (q ⇒ r))) := sorry
+def NotAll_R : (Γ ▸ ∼(all n p)) → (Γ ▸ (exi n ∼p)) := To_Right_Rule NotAll_
 
-def Impl_Right_Rule : ((Γ ▸ p) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ p)) → (Γ ▸ (r ⇒ q))) := sorry
+def AllNot_ : (all n ∼p) ▸ ∼(exi n p) := begin
+  apply Double_negation_intro_R,
+  apply Axiom 0, refl,
+end
 
-def Left_And_Impl_Right_Rule : ((Γ ▸ p₁) → (Γ ▸ q)) → ((Γ ▸ ((p₁ and p₂) ⇒ r)) → (Γ ▸ ((q and p₂) ⇒ r))) := sorry
+def AllNot_R : (Γ ▸ (all n ∼p)) → (Γ ▸ ∼(exi n p)) := To_Right_Rule AllNot_  
 
-def Right_And_Impl_Right_Rule : ((Γ ▸ p₂) → (Γ ▸ q)) → ((Γ ▸ ((p₁ and p₂) ⇒ r)) → (Γ ▸ ((p₁ and q) ⇒ r))) := sorry
+def NotEx_ : ∼(exi n p) ▸ (all n ∼p) := begin
+  apply Double_negation_elim_L,
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+end
 
-def Left_And_Right_Rule_Impl : ((Γ ▸ p₁) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ (p₁ and p₂))) → (Γ ▸ (r ⇒ (q and p₂)))) := sorry
+def NotEx_R : (Γ ▸ ∼(exi n p)) → (Γ ▸ (all n ∼p)) := To_Right_Rule NotEx_
 
-def Right_And_Right_Rule_Impl : ((Γ ▸ p₂) → (Γ ▸ q)) → ((Γ ▸ (r ⇒ (p₁ and p₂))) → (Γ ▸ (r ⇒ (p₁ and q)))) := sorry
+def ExNot_ : (exi n ∼p) ▸ ∼(all n p) := begin
+  apply Right_Rule_To_Not_Rule_L (Right_Rule_To_All_Rule_R Double_negation_elim_R),
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+end
+
+def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
+
+def AllOrOut_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
+
+def AllOrIn_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
+
+def AllAndOut_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := sorry
+
+def AllAndIn_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := sorry
+
+def ExOrOut_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := sorry
+
+def ExOrIn_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := sorry
+
+def ExAndOut_R : (Γ ▸ (exi n (p and q))) → (Γ ▸ ((exi n p) and (exi n q))) := sorry
+
+def ExAndIn_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := sorry
+
+def SwapAll_R : (Γ ▸ (all n (all m p))) → (Γ ▸ (all m (all n p))) := sorry
+
+def SwapEx_R : (Γ ▸ (exi n (exi m p))) → (Γ ▸ (exi m (exi n p))) := sorry
+
+def SwapAllEx_R : (Γ ▸ ∼(all n (exi m ∼p))) → (Γ ▸ (exi m (all n p))) := sorry
+
+def SwapExAll_R : (Γ ▸ ∼(exi n (all m ∼p))) → (Γ ▸ (all m (exi n p))) := sorry
 
 end prf
 

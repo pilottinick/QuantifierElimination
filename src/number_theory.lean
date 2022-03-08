@@ -29,7 +29,6 @@ def nth_succ (t : term NT_succ) : ℕ → term NT_succ
 | 0            := t
 | (nat.succ n) := succ (nth_succ n)
 
-
 /- The axioms of number theory with successor -/
 def NT_succ_Γ : ℕ → (formula NT_succ) :=
 λ n, match n with
@@ -40,24 +39,22 @@ def NT_succ_Γ : ℕ → (formula NT_succ) :=
 
 variables { φ : formula NT_succ } { t : term NT_succ }
 
-/- A term is either zero or a variable -/
-@[simp]
-def zero_or_var (t : term NT_succ) : Prop := 
-  t = zero ∨ (∃ n : ℕ, t = term.var n)
-
-/- A term is a number of succs on a zero or a variable -/
-@[simp]
-def succ_zero_or_var (t : term NT_succ) : Prop :=
-  ∃ s : term NT_succ,
-    ((zero_or_var s) ∧ (∃ n, t = nth_succ s n))
-
-/- Characterizing the terms of NT_succ -/
-def NT_succ_terms : ∀ (t : term NT_succ), succ_zero_or_var t := begin
-  intro t, cases t, 
-  simp, existsi term.var t,
-  split, simp, existsi 0, simp,
-  admit,
+lemma NT_succ_qe_qcl1 : qe_qcl1 NT_succ_Γ := begin
+  intro φ,
+  induction φ,
+  { existsi (φ : qf NT_succ), refl },
+  { repeat { cases φ_ᾰ_1 },
+    { existsi qf.f,
+      split,
+      intro h,
+      apply Prf.All_elim F φ_ᾰ F,
+    },
+  }
 end
+
+/- NT_succ has quantifier elimination -/
+theorem NT_succ_qe : qe NT_succ_Γ := 
+  by { apply qe_qcl1_qe, apply NT_succ_qe_qcl1 }
 
 end NT_succ
 
