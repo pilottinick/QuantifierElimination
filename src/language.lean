@@ -267,31 +267,53 @@ instance qdcl1_to_dnf_coe (L : language) :
   ⟨qdcl1_to_dnf L⟩
 
 /- If a variable occurs in a term -/
-def occurs_in_term (n : ℕ) : term L → Prop
+@[simp]
+def occurs_in_term {L : language} (n : ℕ) : term L → Prop
 | (v m)        := n = m
 | (func _ t)   := ∃ i, occurs_in_term (t i)
 
-notation n \ t     := occurs_in_term _ n t
-
 /- Def 1.5.2. If a variable is free in a formula -/
-def free (n : ℕ) : formula L → Prop
+@[simp]
+def free {L : language} (n : ℕ) : formula L → Prop
 | F                 := false
-| (t₁ ≃ t₂)         := (occurs_in_term L n t₁) ∨ (occurs_in_term L n t₂)
-| (rel rsymb args)  := ∃ i, occurs_in_term L n (args i)
+| (t₁ ≃ t₂)         := (occurs_in_term n t₁) ∨ (occurs_in_term n t₂)
+| (rel rsymb args)  := ∃ i, occurs_in_term n (args i)
 | ∼φ                := free φ
 | (φ₁ or φ₂)        := free φ₁ ∨ free φ₂
-| (all m φ)         := !(n = m) ∧ free φ
+| (all m φ)         := ¬(n = m) ∧ free φ
 
-def var_not_free_in (n : ℕ) : list (formula L) → Prop
-| list.nil             := true
-| (list.cons h t)      := ¬(free _ n h) ∧ (var_not_free_in t)
+/- For all terms, there is a variable which does not occur in the term -/
+lemma for_all_term_ex_var_not_in_term : 
+  ∀ t : (term L), ∃ m : ℕ, ¬(occurs_in_term m t) :=
+begin
+  intro t,
+  cases t,
+  { existsi t + 1, simp },
+  { sorry }
+end
+
+/- For all formulas, there is a variable which is not free in the formula -/
+lemma for_all_formula_ex_var_not_free : 
+  ∀ φ : (formula L), ∃ m : ℕ, ¬(free m φ) :=
+begin
+  intro φ,
+  cases φ,
+  { simp, },
+  
+end
+
+@[simp]
+def var_not_free_in_axioms {L : language} (n : ℕ) (Γ : ℕ → formula L) : Prop
+  := ∀ m : ℕ, ¬(free n (Γ m))
 
 /-- Def 1.8.1. The term with the variable x replaced by the term t -/
+@[simp]
 def replace_term_with (x : ℕ) (t : term L) : term L → term L
 | (v n)              := if (n = x) then t else (v n)
 | (func fsymb args)  := (func fsymb (λ n, replace_term_with (args n)))
 
 /-- Def 1.8.2. The formula with the variable x replaced the term t -/
+@[simp]
 def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 | F                  := falsum
 | (t₁ ≃ t₂)          := (replace_term_with _ x t t₁) ≃ (replace_term_with _ x t t₂)
@@ -301,16 +323,18 @@ def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
 /-- The term t is substitutable for the variable x in formula φ -/
+@[simp]
 def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 | F                    := true
 | (_ ≃ _)              := true
 | (rel _ _)            := true
 | ∼φ                   := substitutable_for φ
 | (φ₁ or φ₂)           := (substitutable_for φ₁) ∧ (substitutable_for φ₂)
-| (all y φ)            := ¬(free _ x φ) ∨ (¬(occurs_in_term _ y t) ∧ (substitutable_for φ))
+| (all y φ)            := ¬(free x φ) ∨ (¬(occurs_in_term y t) ∧ (substitutable_for φ))
 
-/-- The sentences of a language -/
-def sentence : set (formula L) := λ φ, ∀ n : ℕ, ¬(free L n φ)
+/- The sentences of a language -/
+@[simp]
+def sentence : Type := {φ : formula L // ∀ n : ℕ, ¬(free n φ)}
 
 end language
 
@@ -351,7 +375,7 @@ instance : has_coe (var_assign A) (term_assign L A) := ⟨term_assign_of_s _ _ �
 notation ` * ` := term_assign_of_s _ _
 
 /- Variable assignments agree on free variables of a term -/
-def agree_on_free_variables (s₁ s₂ : var_assign A)(t : term L) : Prop := ∀ n : ℕ, occurs_in_term _ n t → s₁ n = s₂ n
+def agree_on_free_variables (s₁ s₂ : var_assign A)(t : term L) : Prop := ∀ n : ℕ, occurs_in_term n t → s₁ n = s₂ n
 
 /- A structure 𝔸 satisfies formula φ with assignment s -/
 def satisfies_with_assignment : var_assign A → formula L → Prop

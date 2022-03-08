@@ -114,7 +114,7 @@ lemma qe_qdcl1_qe_dnf : (qe_qdcl1 Γ) → (qe_dnf Γ) := begin
 end
 
 /- If a theory has quantifer elimination on conjunctions of literals with 
-   a single quantifier it has quantifier elimination -/
+   a single quantifier, it has quantifier elimination -/
 lemma qe_qcl1_qe : (qe_qcl1 Γ) → (qe Γ) := begin
    intro h,
    have h_dnf : qe_dnf Γ := 

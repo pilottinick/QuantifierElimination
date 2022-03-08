@@ -30,6 +30,7 @@ def nth_succ (t : term NT_succ) : ℕ → term NT_succ
 | (nat.succ n) := succ (nth_succ n)
 
 /- The axioms of number theory with successor -/
+@[simp]
 def NT_succ_Γ : ℕ → (formula NT_succ) :=
 λ n, match n with
     | 0    := formula.all 0 ∼((succ v₀) ≃ zero)
@@ -47,7 +48,14 @@ lemma NT_succ_qe_qcl1 : qe_qcl1 NT_succ_Γ := begin
     { existsi qf.f,
       split,
       intro h,
-      apply Prf.All_elim F φ_ᾰ F,
+      apply Prf.Cut,
+      apply h,
+      apply Prf.All_elim F φ_ᾰ v₀,
+      apply Prf.Axiom 0, refl,
+      intro h,
+      apply Prf.Cut, 
+      apply h,
+      apply Prf.All_intro,
     },
   }
 end

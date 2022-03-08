@@ -7,9 +7,6 @@ section prf
 
 variables {L : language} {n m : ℕ}
 
-def var_not_free_in_axioms (n : ℕ) (Γ : ℕ → formula L) : Prop
-  := ∀ m : ℕ, ¬(free _ n (Γ m))
-
 /- Shifts a sequence to the right -/
 @[simp]
 def cons { A : Type } (a : A) (f : ℕ → A) : ℕ → A := 
@@ -551,6 +548,8 @@ def ExNot_ : (exi n ∼p) ▸ ∼(all n p) := begin
 end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
+
+def AllOrOut_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
 
 def AllOrOut_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
 
