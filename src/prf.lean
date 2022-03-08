@@ -549,23 +549,23 @@ end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
 
-def AllOrOut_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
+def AllOrIn_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
 
-def AllOrOut_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
+def AllOrIn_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
 
-def AllOrIn_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
+def AllOrOut_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
 
-def AllAndOut_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := sorry
+def AllAndIn_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := sorry
 
-def AllAndIn_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := sorry
+def AllAndOut_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := sorry
 
-def ExOrOut_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := sorry
+def ExOrIn_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := sorry
 
-def ExOrIn_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := sorry
+def ExOrOut_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := sorry
 
-def ExAndOut_R : (Γ ▸ (exi n (p and q))) → (Γ ▸ ((exi n p) and (exi n q))) := sorry
+def ExAndIn_R : (Γ ▸ (exi n (p and q))) → (Γ ▸ ((exi n p) and (exi n q))) := sorry
 
-def ExAndIn_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := sorry
+def ExAndOut_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := sorry
 
 def SwapAll_R : (Γ ▸ (all n (all m p))) → (Γ ▸ (all m (all n p))) := sorry
 
