@@ -128,7 +128,7 @@ lemma qe_qcl1_qe : (qe_qcl1 Γ) → (qe Γ) := begin
 end
 
 /- Deciable sentences in a theory -/
-def decidable_sent (φ : formula L) : Prop := (sentence _ φ) ∧ ((Γ ▸ φ ↔ Γ ▸ F) ∨ (Γ ▸ φ ↔ Γ ▸ T))
+def decidable_sent (φ : sentence L) : Prop := (Γ ▸ φ ↔ Γ ▸ F) ∨ (Γ ▸ φ ↔ Γ ▸ T)
 
 end quantifier_elimination
 

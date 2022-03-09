@@ -299,7 +299,7 @@ begin
   intro φ,
   cases φ,
   { simp, },
-  
+  repeat { sorry },
 end
 
 @[simp]
@@ -334,7 +334,7 @@ def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
 
 /- The sentences of a language -/
 @[simp]
-def sentence : Type := {φ : formula L // ∀ n : ℕ, ¬(free n φ)}
+def sentence (L : language) := {φ : formula L // ∀ n : ℕ, ¬(free n φ)}
 
 end language
 
