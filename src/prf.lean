@@ -549,11 +549,37 @@ end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
 
-def AllOrIn_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
+lemma AllElim : ∀ i t, Γ i = all n p → (replace_formula_with L n t p :: Γ) ▸ φ → Γ ▸ φ
 
-def AllOrIn_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
+-- This is not valid
+-- def AllOrIn_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
+-- def AllOrIn_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
 
 def AllOrOut_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
+
+lemma replace_formula_with_idem : ∀ x φ, replace_formula_with L x (v x) φ = φ := sorry
+
+def AllAndIn_ : all n (p and q) ▸ ((all n p) and (all n q)) := begin
+  apply AndProves, split,
+  begin
+    apply All_intro _ _ n, simp,
+    rw replace_formula_with_idem,
+    apply AllElim 0 (v n),
+      refl,
+      rw replace_formula_with_idem,
+      apply And_elim_left_R,
+      apply Axiom 0, refl,
+  end,
+  begin
+    apply All_intro _ _ n, simp,
+    rw replace_formula_with_idem,
+    apply AllElim 0 (v n),
+      refl,
+      rw replace_formula_with_idem,
+      apply And_elim_right_R,
+      apply Axiom 0, refl,
+  end,
+end
 
 def AllAndIn_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := sorry
 
