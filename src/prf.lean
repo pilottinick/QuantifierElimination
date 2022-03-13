@@ -37,12 +37,14 @@ inductive Prf : (ℕ → (formula L)) → formula L → Prop
 
 open Prf
 
+@[simp]
 def list_to_func (Γ : list (formula L)) : ℕ → (formula L) :=
 λ n, match Γ.nth n with
     | none       := T
     | some a     := a
     end
 
+@[simp]
 def Prf_list (Γ : list (formula L)) (φ : formula L) : Prop := 
   Prf (list_to_func Γ) φ
 
@@ -52,8 +54,6 @@ infix ` ▸ ` := Prf
 infix ` ▸ ` := Prf_list
 
 notation φ` ▸ `ψ := Prf (λ n, φ) ψ
-
-notation ` ▸ `φ := Prf_list list.nil φ
 
 variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
@@ -262,11 +262,15 @@ def Double_negation_intro_L : Γ ▸ p → (∼∼p::Γ) ▸ r → Γ ▸ r := T
 
 def Double_negation_R : Γ ▸ ∼∼p ↔ Γ ▸ p := sorry
 
-def Top_intro : Γ ▸ T := begin
+def Top_intro_ : p ▸ T := begin
   apply By_contradiction,
   apply Double_negation_elim_R,
   apply Axiom 0, refl,
 end
+
+def Top_intro_R : Γ ▸ p → Γ ▸ T := To_Right_Rule Top_intro_
+
+def Top_intro_L : Γ ▸ p → (T::Γ) ▸ r → Γ ▸ r := To_Left_Rule Top_intro_
 
 def By_contradiction_ : (∼p ⇒ F) ▸ p := begin
     apply Or_elim,
@@ -276,7 +280,6 @@ def By_contradiction_ : (∼p ⇒ F) ▸ p := begin
     apply Bot_elim,
     apply Axiom 0, refl,
   end
-
 
 def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
     apply Or_elim,
@@ -378,7 +381,7 @@ def DeMorganNotOr_R : Γ ▸ ∼(p or q) → Γ ▸ (∼p and ∼q) := To_Right_
 
 def DeMorganNotOr_L : Γ ▸ ∼(p or q) → ((∼p and ∼q)::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganNotOr_
 
-def ExcludedMiddle_ : ▸ (p or ∼p) := begin
+def ExcludedMiddle_ : p ▸ (q or ∼q) := begin
   apply By_contradiction,
   apply DeMorganNotOr_L,
   apply Axiom 0, refl,
@@ -390,11 +393,9 @@ def ExcludedMiddle_ : ▸ (p or ∼p) := begin
   apply Axiom 0, refl,
 end
 
-def ExcludedMiddle : Γ ▸ (p or ∼p) := begin
-  apply weakening _ ExcludedMiddle_,
-  intros n φ h,
-  contradiction,
-end
+def ExcludedMiddle_R : Γ ▸ p → Γ ▸ (p or ∼p) := To_Right_Rule ExcludedMiddle_
+
+def ExcludedMiddle_L : Γ ▸ p → ((p or ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExcludedMiddle_
 
 def DeMorganOr_ : (∼p or ∼q) ▸ ∼(p and q) := begin
     apply Not_intro,
