@@ -493,11 +493,33 @@ def DistributionOrAndOutLeft_R : Γ ▸ ((p or q) and (p or r)) → Γ ▸ (p or
 def DistributionOrAndOutRight_R : Γ ▸ ((p or q) and (r or q)) → Γ ▸ ((p and r) or q) := sorry
 
 -- Commutativity rules 
-def Or_comm_ : (p or q) ▸ (q or p) := sorry
+def Or_comm_ : (p or q) ▸ (q or p) := begin
+  apply Or_elim,
+  apply Axiom 0, refl,
+  apply Or_intro_right,
+  apply Axiom 0, refl,
+  apply Or_intro_left,
+  apply Axiom 0, refl,
+end
 
 def Or_comm_R : Γ ▸ (p or q) → Γ ▸ (q or p) := To_Right_Rule Or_comm_
 
--- Contrapositive and logical operations on proofs
+def Or_comm_L : Γ ▸ (p or q) → ((q or p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Or_comm_
+
+def And_comm_ : (p and q) ▸ (q and p) := begin
+  apply And_intro,
+  apply And_elim_right_L,
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+  apply And_elim_left_L,
+  apply Axiom 0, refl,
+  apply Axiom 0, refl,
+end
+
+def And_comm_R : Γ ▸ (p and q) → Γ ▸ (q and p) := To_Right_Rule And_comm_
+
+def And_comm_L : Γ ▸ (p and q) → ((q and p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_comm_
+
 def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
     intros h,
     apply And_intro,
@@ -549,11 +571,7 @@ end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
 
-lemma AllElim : ∀ i t, Γ i = all n p → (replace_formula_with L n t p :: Γ) ▸ φ → Γ ▸ φ
-
--- This is not valid
--- def AllOrIn_ : all n (p or q) ▸ ((all n p) or (all n p)) := sorry
--- def AllOrIn_R : (Γ ▸ (all n (p or q))) → (Γ ▸ ((all n p) or (all n q))) := sorry
+lemma AllElim : ∀ i t, Γ i = all n p → (replace_formula_with L n t p :: Γ) ▸ φ → Γ ▸ φ := sorry
 
 def AllOrOut_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
 
