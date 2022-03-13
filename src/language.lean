@@ -302,22 +302,23 @@ begin
   repeat { sorry },
 end
 
+/- The variable x is not free in axioms Γ -/
 @[simp]
-def var_not_free_in_axioms {L : language} (n : ℕ) (Γ : ℕ → formula L) : Prop
-  := ∀ m : ℕ, ¬(free n (Γ m))
+def var_not_free_in_axioms {L : language} (x : ℕ) (Γ : ℕ → formula L) : Prop
+  := ∀ m : ℕ, ¬(free x (Γ m))
 
-/-- Def 1.8.1. The term with the variable x replaced by the term t -/
+/-- The term with the variable x replaced by the term t -/
 @[simp]
-def replace_term_with (x : ℕ) (t : term L) : term L → term L
+def replace_term_with {L : language} (x : ℕ) (t : term L) : term L → term L
 | (v n)              := if (n = x) then t else (v n)
 | (func fsymb args)  := (func fsymb (λ n, replace_term_with (args n)))
 
-/-- Def 1.8.2. The formula with the variable x replaced the term t -/
+/-- The formula with the variable x replaced the term t -/
 @[simp]
-def replace_formula_with (x : ℕ) (t : term L) : formula L → formula L
+def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → formula L
 | F                  := falsum
-| (t₁ ≃ t₂)          := (replace_term_with _ x t t₁) ≃ (replace_term_with _ x t t₂)
-| (rel rsymb args)    := rel rsymb (λ n, replace_term_with _ x t (args n))
+| (t₁ ≃ t₂)          := (replace_term_with x t t₁) ≃ (replace_term_with x t t₂)
+| (rel rsymb args)    := rel rsymb (λ n, replace_term_with x t (args n))
 | ∼φ                  := ∼(replace_formula_with φ)
 | (φ₁ or φ₂)          := (replace_formula_with φ₁) or (replace_formula_with φ₂)
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
