@@ -594,51 +594,121 @@ end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
 
-def AllOrOut_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := sorry
+def AllOrOut_ : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
+  apply All_intro _ _ n, simp,
+  rw replace_formula_with_idem,
+  apply Or_elim, apply Axiom 0, refl,
+  all_goals { 
+    apply All_elim n (v n),
+    apply Axiom 0, refl,
+    rw replace_formula_with_idem,
+    { apply Or_intro_left, apply Axiom 0, refl } 
+      <|>
+    { apply Or_intro_right, apply Axiom 0, refl }
+  },
+end
 
-lemma replace_formula_with_idem : ∀ x φ, @replace_formula_with L x (v x) φ = φ := sorry
+def AllOrOut_R : (Γ ▸ ((all n p) or (all n q))) → (Γ ▸ (all n (p or q))) := To_Right_Rule AllOrOut_
 
 def AllAndIn_ : all n (p and q) ▸ ((all n p) and (all n q)) := begin
   apply AndProves, split,
-  begin
+  all_goals { 
     apply All_intro _ _ n, simp,
     rw replace_formula_with_idem,
     apply All_elim n (v n),
       apply Axiom 0, refl,
       rw replace_formula_with_idem,
-      apply And_elim_left_R,
-      apply Axiom 0, refl,
-  end,
-  begin
-    apply All_intro _ _ n, simp,
-    rw replace_formula_with_idem,
-    apply All_elim n (v n),
-      apply Axiom 0, refl,
-      rw replace_formula_with_idem,
-      apply And_elim_right_R,
-      apply Axiom 0, refl,
-  end,
+      { apply And_elim_right_R, apply Axiom 0, refl }
+        <|> 
+      { apply And_elim_left_R, apply Axiom 0, refl, },
+  }
 end
 
-def AllAndIn_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := sorry
+def AllAndIn_R : (Γ ▸ (all n (p and q))) → (Γ ▸ ((all n p) and (all n q))) := To_Right_Rule AllAndIn_
 
-def AllAndOut_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := sorry
+def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
+  apply All_intro _ _ n, simp,
+  rw replace_formula_with_idem,
+  apply And_intro,
+  { 
+    apply And_elim_left_L, 
+    apply Axiom 0, 
+    refl,
+    apply All_elim n (v n),
+      apply Axiom 0, refl,
+      rw replace_formula_with_idem,
+      apply Axiom 0, refl,
+  },
+  {
+    apply And_elim_right_L, 
+    apply Axiom 0, 
+    refl,
+    apply All_elim n (v n),
+      apply Axiom 0, refl,
+      rw replace_formula_with_idem,
+      apply Axiom 0, refl,
+  }
+end
 
-def ExOrIn_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := sorry
+def AllAndOut_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := To_Right_Rule AllAndOut_
 
-def ExOrOut_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := sorry
+def ExOrIn_ : (exi n (p or q)) ▸ ((exi n p) or (exi n q)) := begin
+  apply DeMorganNotAnd_R,
+  apply Right_Rule_To_Not_Rule_R AllAndIn_R,
+  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganNotOr_R),
+  apply Axiom 0, refl,
+end
 
-def ExAndIn_R : (Γ ▸ (exi n (p and q))) → (Γ ▸ ((exi n p) and (exi n q))) := sorry
+def ExOrIn_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := To_Right_Rule ExOrIn_
 
-def ExAndOut_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := sorry
+def ExOrOut_ : ((exi n p) or (exi n q)) ▸ (exi n (p or q)) := begin
+  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganAnd_R),
+  apply Right_Rule_To_Not_Rule_R AllAndOut_R,
+  apply DeMorganOr_R,
+  apply Axiom 0, refl,
+end
 
-def SwapAll_R : (Γ ▸ (all n (all m p))) → (Γ ▸ (all m (all n p))) := sorry
+def ExOrOut_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := To_Right_Rule ExOrOut_
 
-def SwapEx_R : (Γ ▸ (exi n (exi m p))) → (Γ ▸ (exi m (exi n p))) := sorry
+def ExAndOut_ : ((exi n p) and (exi n q)) ▸ (exi n (p and q))  := begin
+  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganOr_R),
+  apply Right_Rule_To_Not_Rule_R AllOrOut_R,
+  apply DeMorganAnd_R,
+  apply Axiom 0, refl,
+end
 
-def SwapAllEx_R : (Γ ▸ ∼(all n (exi m ∼p))) → (Γ ▸ (exi m (all n p))) := sorry
+def ExAndOut_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := To_Right_Rule ExAndOut_
 
-def SwapExAll_R : (Γ ▸ ∼(exi n (all m ∼p))) → (Γ ▸ (all m (exi n p))) := sorry
+def SwapAll_ : (all n (all m p)) ▸ (all m (all n p)) := begin
+  apply All_intro _ _ m, simp,
+    rw replace_formula_with_idem,
+  apply All_intro _ _ n, simp,
+    rw replace_formula_with_idem,
+  apply All_elim n (v n),
+    apply Axiom 0, refl,
+    rw replace_formula_with_idem,
+  apply All_elim m (v m),
+    apply Axiom 0, refl,
+    rw replace_formula_with_idem,
+  apply Axiom 0, refl,
+end
+
+def SwapAll_R : (Γ ▸ (all n (all m p))) → (Γ ▸ (all m (all n p))) := To_Right_Rule SwapAll_
+
+def SwapEx_ : (exi n (exi m p)) ▸ (exi m (exi n p)) := begin
+  simp,
+  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R Double_negation_intro_R),
+  apply Right_Rule_To_Not_Rule_L (Right_Rule_To_All_Rule_R Double_negation_elim_R),
+  apply Axiom 0, refl,
+  apply Right_Rule_To_Not_Rule_R SwapAll_R,
+  apply Axiom 0, refl,
+end
+
+def SwapEx_R : (Γ ▸ (exi n (exi m p))) → (Γ ▸ (exi m (exi n p))) := To_Right_Rule SwapEx_
+
+-- def SwapAllEx_R : (Γ ▸ ∼(all n (exi m ∼p))) → (Γ ▸ (exi m (all n p))) := sorry
+
+-- def SwapExAll_R : (Γ ▸ ∼(exi n (all m ∼p))) → (Γ ▸ (all m (exi n p))) := sorry
 
 end prf
 

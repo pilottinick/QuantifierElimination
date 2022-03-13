@@ -323,6 +323,9 @@ def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → f
 | (φ₁ or φ₂)          := (replace_formula_with φ₁) or (replace_formula_with φ₂)
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
+/- Replacing a variable vₓ with vₓ does not change the formula -/
+lemma replace_formula_with_idem : ∀ x φ, @replace_formula_with L x (v x) φ = φ := sorry
+
 /-- The term t is substitutable for the variable x in formula φ -/
 @[simp]
 def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
