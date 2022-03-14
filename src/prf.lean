@@ -7,20 +7,6 @@ section prf
 
 variables {L : language} {n m : ℕ}
 
-/- Shifts a sequence to the right -/
-@[simp]
-def cons { A : Type } (a : A) (f : ℕ → A) : ℕ → A := 
-  λ n, if n = 0 then a else (f (n - 1))
-
-/- Append two sequences -/
-@[simp]
-def append { A : Type } (f : ℕ → A) (g : ℕ → A) : ℕ → A :=
-  λ n : ℕ, if (even n) then f (n / 2) else g ((n - 1) / 2)
-
-notation a`::`f := cons a f
-
-notation l`++`f := append l f
-
 inductive Prf : (ℕ → (formula L)) → formula L → Prop
 | Axiom : ∀ {Γ : ℕ → (formula L)} n φ, Γ n = φ → Prf Γ φ
 | Bot_elim : ∀ {Γ : ℕ → (formula L)} φ, Prf Γ F → Prf Γ φ
@@ -132,7 +118,7 @@ def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
 
 variables (h : formula L) (l : ℕ → formula L)
 
-def To_Right_Rule_List : ((h::l) ▸ q) → ∀ Γ : ℕ → (formula L), Γ ▸ h → ((l ++ Γ) ▸ q) := begin
+def To_Right_Rule_List (l : list (formula L)) : ((h::l) ▸ q) → ∀ Γ : list (formula L), Γ ▸ h → ((l ++ Γ) ▸ q) := begin
     intros hlq Γ Γq,
     apply Cut,
     apply weakening _ hlq,
@@ -187,27 +173,43 @@ end
 
 def To_Not_Rule_ : p ▸ q → ∼p ▸ ∼q := sorry
 
-def Right_Rule_To_Not_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
+def Rule_To_Not_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
 
-def Right_Rule_To_Not_Rule_L : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → (∼q::Γ) ▸ r → Γ ▸ r) := sorry
+def Equiv_Rule_To_Not_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ ∼p ↔ Γ ▸ ∼q) := sorry
 
-def Right_Rule_To_Left_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
+def Rule_To_Not_Rule_L : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → (∼q::Γ) ▸ r → Γ ▸ r) := sorry
 
-def Right_Rule_To_Right_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
+def Rule_To_Left_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
 
-def Right_Rule_To_Or_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
+def Equiv_Rule_To_Left_Or_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p or r) ↔ Γ ▸ (q or r)) := sorry
 
-def Right_Rule_To_Left_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
+def Rule_To_Right_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
 
-def Right_Rule_To_Right_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+def Equiv_Rule_To_Right_Or_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (r or p) ↔ Γ ▸ (r or q)) := sorry
 
-def Right_Rule_To_And_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
+def Rule_To_Or_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
 
-def Right_Rule_To_All_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (all n p) → Γ ▸ (all n q)) := sorry
+def Equiv_Rule_To_Or_Rule_R : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) ↔ (Γ ▸ (q₁ or q₂))) := sorry
 
-def Right_Rule_To_All_Rule_L : (Γ ▸ p → Γ ▸ q) → ((Γ ▸ (all n p)) → ((all n q)::Γ) ▸ r → Γ ▸ r) := sorry 
+def Rule_To_Left_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
 
-def Right_Rule_To_Ex_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (exi n p) → Γ ▸ (exi n q)) := sorry 
+def Equiv_Rule_To_Left_And_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p and r) ↔ Γ ▸ (q and r)) := sorry
+
+def Rule_To_Right_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+
+def Rule_To_And_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
+
+def Equiv_Rule_To_And_Rule_R : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) ↔ (Γ ▸ (q₁ and q₂))) := sorry
+
+def Rule_To_All_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (all n p) → Γ ▸ (all n q)) := sorry
+
+def Equiv_Rule_To_All_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (all n p) ↔ Γ ▸ (all n q)) := sorry
+
+def Rule_To_All_Rule_L : (Γ ▸ p → Γ ▸ q) → ((Γ ▸ (all n p)) → ((all n q)::Γ) ▸ r → Γ ▸ r) := sorry 
+
+def Rule_To_Ex_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (exi n p) → Γ ▸ (exi n q)) := sorry 
+
+def Equiv_Rule_To_Ex_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (exi n p) ↔ Γ ▸ (exi n q)) := sorry 
 
 -- Basic intro and elim ND rules
 def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
@@ -672,6 +674,26 @@ end
 def Contrapose_R : Γ ▸ (p ⇒ q) → Γ ▸ (∼q ⇒ ∼p) := To_Right_Rule Contrapose_
 
 def Contrapose_L : Γ ▸ (p ⇒ q) → ((∼q ⇒ ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Contrapose_
+
+def All_To_Ex_ : (all n p) ▸ ∼(exi n ∼p) := begin
+  apply Double_negation_intro_R,
+  apply Right_Rule_To_All_Rule_R Double_negation_intro_R,
+  apply Axiom 0, refl,
+end
+
+def All_To_Ex_R : Γ ▸ (all n p) → Γ ▸ ∼(exi n ∼p) := To_Right_Rule All_To_Ex_
+
+def All_To_Ex_L : Γ ▸ (all n p) → (∼(exi n ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule All_To_Ex_
+
+def Ex_To_All_ : ∼(exi n ∼p) ▸ (all n p) := begin
+  apply Right_Rule_To_All_Rule_R Double_negation_elim_R,
+  apply Double_negation_elim_R,
+  apply Axiom 0, refl,
+end
+
+def Ex_To_All_R : Γ ▸ ∼(exi n ∼p) → Γ ▸ (all n p) := To_Right_Rule Ex_To_All_
+
+def Ex_To_All_L : Γ ▸ ∼(exi n ∼p) → ((all n p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Ex_To_All_
 
 def NotAll_ : ∼(all n p) ▸ (exi n ∼p) := begin
   apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R Double_negation_intro_R),

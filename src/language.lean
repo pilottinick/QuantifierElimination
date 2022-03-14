@@ -1,11 +1,26 @@
 import data.matrix.notation
 import algebra.group_power
+import data.nat.parity
 
 universe variables u v
 
 namespace first_order
 
 section language
+
+/- Shifts a sequence to the right -/
+@[simp]
+def cons { A : Type } (a : A) (f : ℕ → A) : ℕ → A := 
+  λ n, if n = 0 then a else (f (n - 1))
+
+/- Append two sequences -/
+@[simp]
+def append { A : Type } (f : ℕ → A) (g : ℕ → A) : ℕ → A :=
+  λ n : ℕ, if (even n) then f (n / 2) else g ((n - 1) / 2)
+
+notation a`::`f := cons a f
+
+notation l`++`f := append l f
 
 /- Definition of a language -/
 structure language :=
@@ -118,8 +133,8 @@ def lit_to_qf : lit L → qf L
 
 /- Conjunctions of literals -/
 inductive cl
-| l        : lit L → cl 
-| c        : cl → cl → cl
+| l : lit L → cl 
+| c : cl → cl → cl
 
 @[simp]
 def lit_to_cl : lit L → cl L
@@ -185,58 +200,25 @@ instance dnf_to_formula_coe (L : language) :
   has_coe (dnf L) (formula L) :=
   ⟨dnf_to_formula L⟩
 
-/- A single quantifier on a conjunction of literals -/
-inductive qcl1
-| cl : cl L → qcl1
-| al : ℕ → cl L → qcl1
-| ex : ℕ → cl L → qcl1
+/- A single existential quantifier on a conjunction of literals -/
+inductive ecl1
+| cl : cl L → ecl1
+| ex : ℕ → cl L → ecl1
 
-/- A series of quantifiers on a conjunction of literals -/
-inductive qcl
-| cl : cl L → qcl
-| al : ℕ → qcl → qcl
-| ex : ℕ → qcl → qcl
+/- A single existential quantifier on a disjunction of conjunction of literals -/
+inductive edcl1
+| dcl : dcl L → edcl1
+| ex  : ℕ → dcl L → edcl1
 
 @[simp]
-def qcl1_to_qcl : qcl1 L → qcl L
-| (qcl1.cl cl)   := qcl.cl cl
-| (qcl1.al n cl) := qcl.al n (qcl.cl cl)
-| (qcl1.ex n cl) := qcl.ex n (qcl.cl cl)
+def ecl1_to_edcl1 : ecl1 L → edcl1 L 
+| (ecl1.cl cl)  := edcl1.dcl cl
+| (ecl1.ex n cl) := edcl1.ex n cl
 
 @[reducible]
-instance qcl1_to_qcl_coe (L : language) :
-  has_coe (qcl1 L) (qcl L) :=
-  ⟨qcl1_to_qcl L⟩
-
-@[simp]
-def qcl_to_formula : qcl L → formula L
-| (qcl.cl cl)    := qf_to_formula _ (cl_to_qf _ cl)
-| (qcl.al n qcl) := (all n (qcl_to_formula qcl))
-| (qcl.ex n qcl) := (exi n (qcl_to_formula qcl))
-
-/- A disjunction of qcl -/
-inductive dqcl
-| qcl : qcl L → dqcl
-| d   : dqcl → dqcl → dqcl
-
-@[simp]
-def qcl_to_dqcl : qcl L → dqcl L 
-| qcl := dqcl.qcl qcl
-
-@[reducible]
-instance qcl_to_dqcl_coe (L : language) :
-  has_coe (qcl L) (dqcl L) :=
-  ⟨qcl_to_dqcl L⟩
-
-@[simp]
-def dqcl_to_formula : dqcl L → formula L
-| (dqcl.qcl qcl)       := qcl_to_formula _ qcl
-| (dqcl.d dqcl₁ dqcl₂) := (dqcl_to_formula dqcl₁) or (dqcl_to_formula dqcl₂)
-
-@[reducible]
-instance dqcl_to_formula_coe (L : language) :
-  has_coe (dqcl L) (formula L) :=
-  ⟨dqcl_to_formula L⟩
+instance ecl1_to_edcl1_coe (L : language) :
+  has_coe (ecl1 L) (edcl1 L) :=
+  ⟨ecl1_to_edcl1 L⟩
 
 /- A single quantifier on a disjunction of conjunction of literals -/
 inductive qdcl1
@@ -245,15 +227,14 @@ inductive qdcl1
 | ex  : ℕ → dcl L → qdcl1
 
 @[simp]
-def qcl1_to_qdcl1 : qcl1 L → qdcl1 L 
-| (qcl1.cl cl)   := qdcl1.dcl (dcl.cl cl)
-| (qcl1.al n cl) := qdcl1.al n (dcl.cl cl)
-| (qcl1.ex n cl) := qdcl1.ex n (dcl.cl cl)
+def edcl1_to_qdcl1 : edcl1 L → qdcl1 L 
+| (edcl1.dcl dcl)  := qdcl1.dcl dcl
+| (edcl1.ex n dcl) := qdcl1.ex n dcl
 
 @[reducible]
 instance qcl1_to_qdcl1_coe (L : language) :
-  has_coe (qcl1 L) (qdcl1 L) :=
-  ⟨qcl1_to_qdcl1 L⟩
+  has_coe (edcl1 L) (qdcl1 L) :=
+  ⟨edcl1_to_qdcl1 L⟩
 
 @[simp]
 def qdcl1_to_dnf : qdcl1 L → dnf L
@@ -306,6 +287,22 @@ end
 @[simp]
 def var_not_free_in_axioms {L : language} (x : ℕ) (Γ : ℕ → formula L) : Prop
   := ∀ m : ℕ, ¬(free x (Γ m))
+
+lemma var_not_free_in_axioms_cons {L : language} : 
+  ∀ (x : ℕ) (φ : formula L) (Γ : ℕ → formula L), 
+    (var_not_free_in_axioms x (λ n, φ) ∧ var_not_free_in_axioms x Γ) → 
+     var_not_free_in_axioms x (φ::Γ) := begin
+  intros x φ Γ h m hf,
+  have h₁ := h.left,
+  have h₂ := h.right,
+  cases m,
+  simp at h₁,
+  simp at hf,
+  contradiction,
+  simp at hf,
+  simp at h₂,
+  apply (h₂ m) hf,
+end
 
 /-- The term with the variable x replaced by the term t -/
 @[simp]

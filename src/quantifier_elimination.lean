@@ -10,30 +10,33 @@ variables {L : language} (Γ : ℕ → (formula L)) {φ φ₁ φ₂ ψ : formula
 @[simp]
 def equiv_qf (φ : formula L) := ∃ ψ : qf L, Γ ▸ φ ↔ Γ ▸ ψ
 
-def Right_Rule_To_equiv_qf_Rule {Γ : ℕ → (formula L)} : (Γ ▸ p → Γ ▸ q) → (equiv_qf Γ p → equiv_qf Γ q) := sorry
+def Equiv_Rule_To_equiv_qf_Rule {Γ : ℕ → (formula L)} : (Γ ▸ p ↔ Γ ▸ q) → (equiv_qf Γ p → equiv_qf Γ q) := begin
+   intros h₁ h₂,
+   rcases h₂ with ⟨φ₃, h₃⟩,
+   existsi φ₃,
+   split,
+   intro h₄,
+   apply h₃.mp (h₁.mpr h₄),
+   intro h₄,
+   apply h₁.mp (h₃.mpr h₄),
+end
 
 /- If a theory Γ has quantifier elimination -/
 @[simp]
 def qe := ∀ (φ : formula L), equiv_qf Γ φ
 
-/- If a theory Γ has quantifier elimination on conjugations of literals with 
-   a single quantifier -/
-@[simp]
-def qe_qcl1 := ∀ (φ : qcl1 L), equiv_qf Γ φ
+/- If a theory Γ has quantifier elimination on conjunctions of literals with
+   with a single existential quantifier -/
+def qe_ecl1 := ∀ (φ : ecl1 L), equiv_qf Γ φ
+
+/- If a theory Γ has quantifier elimination on disjunctions of conjunctions
+   of literals with a single existential quantifier -/
+def qe_edcl1 := ∀ (φ : edcl1 L), equiv_qf Γ φ
 
 /- If a theory Γ has quantifier elimination on disjunctions of conjugations 
    of literals with a single quantifier -/
 @[simp]
 def qe_qdcl1 := ∀ (φ : qdcl1 L), equiv_qf Γ φ
-
-/- If a theory Γ has quantifier elimination on quantified conjugations of literals -/
-@[simp]
-def qe_qcl := ∀ (φ : qcl L), equiv_qf Γ φ
-
-/- If a theory Γ has quantifier elimination on disjunctions of quantified 
-   conjugations of literals -/
-@[simp]
-def qe_dqcl := ∀ (φ : dqcl L), equiv_qf Γ φ
 
 @[simp]
 def qe_dnf := ∀ (φ : dnf L), equiv_qf Γ φ
@@ -51,33 +54,42 @@ lemma equiv_qf_or_equiv_qf : equiv_qf Γ φ₁ → equiv_qf Γ φ₂ → equiv_q
    intros h_φ₁ h_φ₂,
    rcases h_φ₁ with ⟨φ₁', h₁⟩,
    rcases h_φ₂ with ⟨φ₂', h₂⟩,
-   apply Right_Rule_To_equiv_qf_Rule (Right_Rule_To_Or_Rule_R h₁.mpr h₂.mpr),
+   apply Equiv_Rule_To_equiv_qf_Rule (Equiv_Rule_To_Or_Rule_R ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
    existsi (qf.o φ₁' φ₂'), refl,
 end
 
-lemma qe_qcl1_qe_qdcl1 : (qe_qcl1 Γ) → (qe_qdcl1 Γ) := begin
+lemma qe_ecl1_qe_edcl1 : (qe_ecl1 Γ) → (qe_edcl1 Γ) := begin
    intros h₁ φ,
    cases φ,
    {  existsi (φ : qf L), refl, },
    {  induction φ_ᾰ_1,
-      {  rcases (h₁ (qcl1.al φ_ᾰ φ_ᾰ_1)) with ⟨φ₂, h₂⟩,
-         apply Right_Rule_To_equiv_qf_Rule h₂.mpr,
-         existsi φ₂, refl,   
-      },
-      {  apply Right_Rule_To_equiv_qf_Rule AllOrIn_R, 
-         apply equiv_qf_or_equiv_qf,
-         repeat { assumption },
-      },
+      rcases (h₁ (ecl1.ex φ_ᾰ φ_ᾰ_1)) with ⟨φ₂, h₂⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule ⟨h₂.mpr, h₂.mp⟩,
+      existsi φ₂, refl,
+      rcases φ_ᾰ_1_ih_ᾰ with ⟨φ₂, h₂⟩,
+      rcases φ_ᾰ_1_ih_ᾰ_1 with ⟨φ₃, h₃⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule ⟨ExOrOut_R, ExOrIn_R⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule (Equiv_Rule_To_Or_Rule_R ⟨h₂.mpr, h₂.mp⟩ ⟨h₃.mpr, h₃.mp⟩),
+      existsi qf.o φ₂ φ₃, refl,
    },
-   {  induction φ_ᾰ_1,
-      {  rcases (h₁ (qcl1.ex φ_ᾰ φ_ᾰ_1)) with ⟨φ₂, h₂⟩,
-         apply Right_Rule_To_equiv_qf_Rule h₂.mpr,
-         existsi φ₂, refl,   
-      },
-      {  apply Right_Rule_To_equiv_qf_Rule ExOrIn_R, 
-         apply equiv_qf_or_equiv_qf,
-         repeat { assumption },
-      },
+end
+
+lemma qe_edcl1_qe_qdcl1 : (qe_edcl1 Γ) → (qe_qdcl1 Γ) := begin
+   intros h₁ φ,
+   induction φ,
+   {  existsi (φ : qf L), refl, },
+   { 
+      rcases (qf_equiv_dcl Γ (qf.n φ_ᾰ_1)) with ⟨φ₂, h₂⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule ⟨Ex_To_All_R, All_To_Ex_R⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule 
+         (Equiv_Rule_To_Not_Rule_R (Equiv_Rule_To_Ex_Rule_R ⟨h₂.mpr, h₂.mp⟩)),
+      rcases (h₁ (edcl1.ex φ_ᾰ φ₂)) with ⟨φ₃, h₃⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule (Equiv_Rule_To_Not_Rule_R ⟨h₃.mpr, h₃.mp⟩),
+      existsi (qf.n φ₃), refl,
+   },
+   {  rcases (h₁ (edcl1.ex φ_ᾰ φ_ᾰ_1)) with ⟨φ₂, h₂⟩,
+      apply Equiv_Rule_To_equiv_qf_Rule ⟨h₂.mpr, h₂.mp⟩,
+      existsi φ₂, refl,
    }
 end
 
@@ -114,11 +126,11 @@ lemma qe_qdcl1_qe_dnf : (qe_qdcl1 Γ) → (qe_dnf Γ) := begin
 end
 
 /- If a theory has quantifer elimination on conjunctions of literals with 
-   a single quantifier, it has quantifier elimination -/
-lemma qe_qcl1_qe : (qe_qcl1 Γ) → (qe Γ) := begin
+   a single existential quantifier, it has quantifier elimination -/
+lemma qe_qcl1_qe : (qe_ecl1 Γ) → (qe Γ) := begin
    intro h,
    have h_dnf : qe_dnf Γ := 
-      by { apply qe_qdcl1_qe_dnf, apply qe_qcl1_qe_qdcl1, assumption },
+      by { apply qe_qdcl1_qe_dnf, apply qe_edcl1_qe_qdcl1, apply qe_ecl1_qe_edcl1, assumption },
    intro φ₁,
    rcases (for_all_equiv_dnf Γ φ₁) with ⟨φ₂, h₂⟩,
    apply Right_Rule_To_equiv_qf_Rule h₂.mpr,
