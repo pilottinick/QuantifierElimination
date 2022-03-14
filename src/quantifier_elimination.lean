@@ -127,7 +127,7 @@ end
 
 /- If a theory has quantifer elimination on conjunctions of literals with 
    a single existential quantifier, it has quantifier elimination -/
-lemma qe_qcl1_qe : (qe_ecl1 Γ) → (qe Γ) := begin
+lemma qe_ecl1_qe : (qe_ecl1 Γ) → (qe Γ) := begin
    intro h,
    have h_dnf : qe_dnf Γ := 
       by { apply qe_qdcl1_qe_dnf, apply qe_edcl1_qe_qdcl1, apply qe_ecl1_qe_edcl1, assumption },

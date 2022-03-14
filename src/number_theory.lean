@@ -42,37 +42,18 @@ variables { φ : formula NT_succ } { t : term NT_succ }
 
 lemma var_not_free_in_NT_succ_Γ : ∀ x : ℕ, var_not_free_in_axioms x NT_succ_Γ := sorry
 
-lemma NT_succ_qe_qcl1 : qe_qcl1 NT_succ_Γ := begin
+lemma NT_succ_qe_ecl1 : qe_ecl1 NT_succ_Γ := begin
   intro φ,
   induction φ,
   { existsi (φ : qf NT_succ), refl },
   { repeat { cases φ_ᾰ_1 },
-    { existsi qf.f,
-      split,
-      intro h,
-      apply Prf.Cut,
-      apply h,
-      apply Prf.All_elim φ_ᾰ v₀ F,
-      apply Prf.Axiom 0, refl,
-      apply Prf.Axiom 0, refl,
-      intro h,
-      apply Prf.Cut, 
-      apply h,
-      apply Prf.All_intro _ _ 0,
-      apply var_not_free_in_axioms_cons,
-      apply and.intro,
-      simp,
-      intro hf,
-      apply hf,
-      apply var_not_free_in_NT_succ_Γ,
-      
-    },
+    repeat { sorry },
   }
 end
 
 /- NT_succ has quantifier elimination -/
 theorem NT_succ_qe : qe NT_succ_Γ := 
-  by { apply qe_qcl1_qe, apply NT_succ_qe_qcl1 }
+  by { apply qe_ecl1_qe, apply NT_succ_qe_ecl1 }
 
 end NT_succ
 

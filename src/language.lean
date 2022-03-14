@@ -261,7 +261,7 @@ def free {L : language} (n : ℕ) : formula L → Prop
 | (rel rsymb args)  := ∃ i, occurs_in_term n (args i)
 | ∼φ                := free φ
 | (φ₁ or φ₂)        := free φ₁ ∨ free φ₂
-| (all m φ)         := ¬(n = m) ∧ free φ
+| (all m φ)         := ¬(m = n) ∧ free φ
 
 /- For all terms, there is a variable which does not occur in the term -/
 lemma for_all_term_ex_var_not_in_term : 
@@ -304,13 +304,13 @@ lemma var_not_free_in_axioms_cons {L : language} :
   apply (h₂ m) hf,
 end
 
-/-- The term with the variable x replaced by the term t -/
+/-- Replace the variable vₓ with the term t -/
 @[simp]
 def replace_term_with {L : language} (x : ℕ) (t : term L) : term L → term L
 | (v n)              := if (n = x) then t else (v n)
 | (func fsymb args)  := (func fsymb (λ n, replace_term_with (args n)))
 
-/-- The formula with the variable x replaced the term t -/
+/-- Replace the variable vₓ with the term t -/
 @[simp]
 def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → formula L
 | F                  := falsum
@@ -323,15 +323,37 @@ def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → f
 /- Replacing a variable vₓ with vₓ does not change the formula -/
 lemma replace_formula_with_idem : ∀ x φ, @replace_formula_with L x (v x) φ = φ := sorry
 
-/-- The term t is substitutable for the variable x in formula φ -/
+/-- The term t is substitutable for the variable vₓ -/
 @[simp]
-def substitutable_for (x : ℕ) (t : term L) : formula L → Prop
+def substitutable_for {L : language} (t : term L) (x : ℕ) : formula L → Prop
 | F                    := true
 | (_ ≃ _)              := true
 | (rel _ _)            := true
 | ∼φ                   := substitutable_for φ
 | (φ₁ or φ₂)           := (substitutable_for φ₁) ∧ (substitutable_for φ₂)
-| (all y φ)            := ¬(free x φ) ∨ (¬(occurs_in_term y t) ∧ (substitutable_for φ))
+| (all y φ)            := ¬(free x (all y φ)) ∨ (¬(occurs_in_term y t) ∧ (substitutable_for φ))
+
+/- The variable vₓ is always substitutible for the variable vₓ -/
+lemma substitutable_for_idem : ∀ x φ, @substitutable_for L (v x) x φ := begin
+  intros x φ,
+  induction φ,
+  any_goals { by { simp  } },
+  assumption,
+  apply and.intro,
+  repeat { assumption },
+  unfold substitutable_for,
+  have x_eq := em (φ_ᾰ = x),
+  apply or.elim x_eq,
+  intro h₁,
+  apply or.intro_left,
+  unfold free,
+  intro c,
+  apply c.left h₁,
+  intro h₂,
+  apply or.intro_right,
+  apply and.intro,
+  repeat { assumption },
+end
 
 /- The sentences of a language -/
 @[simp]

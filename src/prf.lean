@@ -18,7 +18,7 @@ inductive Prf : (ℕ → (formula L)) → formula L → Prop
 | All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_axioms m Γ → 
     Prf Γ (replace_formula_with n (term.var m) φ) → Prf Γ (formula.all n φ)
 | All_elim : ∀ {Γ : ℕ → (formula L)} n t φ ψ, Prf Γ (formula.all n φ) → 
-    Prf ((replace_formula_with n t φ) :: Γ) ψ → Prf Γ ψ
+    substitutable_for t n φ → Prf ((replace_formula_with n t φ) :: Γ) ψ → Prf Γ ψ
 | Cut : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
@@ -262,8 +262,6 @@ def Double_negation_intro_R : Γ ▸ p → Γ ▸ ∼∼p := To_Right_Rule Doubl
 
 def Double_negation_intro_L : Γ ▸ p → (∼∼p::Γ) ▸ r → Γ ▸ r := To_Left_Rule Double_negation_intro_
 
-def Double_negation_R : Γ ▸ ∼∼p ↔ Γ ▸ p := sorry
-
 def Top_intro_ : p ▸ T := begin
   apply By_contradiction,
   apply Double_negation_elim_R,
@@ -488,7 +486,7 @@ def DistributionAndOrInRight_R : Γ ▸ ((p or q) and r) → Γ ▸ ((p and r) o
 
 def DistributionAndOrInRight_L : Γ ▸ ((p or q) and r) → (((p and r) or (q and r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrInRight_
 
-def DistributionAndOrOutLeft_ : ((r and q) or (r and q)) ▸ (r and (p or q)) := begin
+def DistributionAndOrOutLeft_ : ((r and p) or (r and q)) ▸ (r and (p or q)) := begin
   apply And_intro,
   apply Or_elim,
   apply Axiom 0, refl,
@@ -507,9 +505,9 @@ def DistributionAndOrOutLeft_ : ((r and q) or (r and q)) ▸ (r and (p or q)) :=
   } },
 end
 
-def DistributionAndOrOutLeft_R : Γ ▸ ((r and q) or (r and q)) → Γ ▸ (r and (p or q)) := To_Right_Rule DistributionAndOrOutLeft_
+def DistributionAndOrOutLeft_R : Γ ▸ ((r and p) or (r and q)) → Γ ▸ (r and (p or q)) := To_Right_Rule DistributionAndOrOutLeft_
 
-def DistributionAndOrOutLeft_L : Γ ▸ ((r and q) or (r and q)) → ((r and (p or q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrOutLeft_
+def DistributionAndOrOutLeft_L : Γ ▸ ((r and p) or (r and q)) → ((r and (p or q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrOutLeft_
 
 def DistributionAndOrOutRight_ : ((p and r) or (q and r)) ▸ ((p or q) and r) := begin
   apply And_intro,
@@ -677,7 +675,7 @@ def Contrapose_L : Γ ▸ (p ⇒ q) → ((∼q ⇒ ∼p)::Γ) ▸ r → Γ ▸ r
 
 def All_To_Ex_ : (all n p) ▸ ∼(exi n ∼p) := begin
   apply Double_negation_intro_R,
-  apply Right_Rule_To_All_Rule_R Double_negation_intro_R,
+  apply Rule_To_All_Rule_R Double_negation_intro_R,
   apply Axiom 0, refl,
 end
 
@@ -686,7 +684,7 @@ def All_To_Ex_R : Γ ▸ (all n p) → Γ ▸ ∼(exi n ∼p) := To_Right_Rule A
 def All_To_Ex_L : Γ ▸ (all n p) → (∼(exi n ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule All_To_Ex_
 
 def Ex_To_All_ : ∼(exi n ∼p) ▸ (all n p) := begin
-  apply Right_Rule_To_All_Rule_R Double_negation_elim_R,
+  apply Rule_To_All_Rule_R Double_negation_elim_R,
   apply Double_negation_elim_R,
   apply Axiom 0, refl,
 end
@@ -696,7 +694,7 @@ def Ex_To_All_R : Γ ▸ ∼(exi n ∼p) → Γ ▸ (all n p) := To_Right_Rule E
 def Ex_To_All_L : Γ ▸ ∼(exi n ∼p) → ((all n p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Ex_To_All_
 
 def NotAll_ : ∼(all n p) ▸ (exi n ∼p) := begin
-  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R Double_negation_intro_R),
+  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R Double_negation_intro_R),
   apply Axiom 0, refl,
 end
 
@@ -718,12 +716,16 @@ end
 def NotEx_R : (Γ ▸ ∼(exi n p)) → (Γ ▸ (all n ∼p)) := To_Right_Rule NotEx_
 
 def ExNot_ : (exi n ∼p) ▸ ∼(all n p) := begin
-  apply Right_Rule_To_Not_Rule_L (Right_Rule_To_All_Rule_R Double_negation_elim_R),
+  apply Rule_To_Not_Rule_L (Rule_To_All_Rule_R Double_negation_elim_R),
   apply Axiom 0, refl,
   apply Axiom 0, refl,
 end
 
 def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
+
+def AllLeftOrOut_ : ¬(free n q) → ((all n p) or q) ▸ (all n (p or q)) := sorry
+
+def AllRightOrOut_ : ∀ m ≠ n, (p or (all n q)) ▸ (all n (p or (replace_formula_with n (v m) q))) := sorry
 
 def AllOrOut_ : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
   apply All_intro _ _ n, simp,
@@ -732,6 +734,7 @@ def AllOrOut_ : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
   all_goals { 
     apply All_elim n (v n),
     apply Axiom 0, refl,
+    apply substitutable_for_idem,
     rw replace_formula_with_idem,
     { apply Or_intro_left, apply Axiom 0, refl } 
       <|>
@@ -750,6 +753,7 @@ def AllAndIn_ : all n (p and q) ▸ ((all n p) and (all n q)) := begin
     rw replace_formula_with_idem,
     apply All_elim n (v n),
       apply Axiom 0, refl,
+      apply substitutable_for_idem,
       rw replace_formula_with_idem,
       { apply And_elim_right_R, apply Axiom 0, refl }
         <|> 
@@ -771,6 +775,7 @@ def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
     refl,
     apply All_elim n (v n),
       apply Axiom 0, refl,
+      apply substitutable_for_idem,
       rw replace_formula_with_idem,
       apply Axiom 0, refl,
   },
@@ -780,6 +785,7 @@ def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
     refl,
     apply All_elim n (v n),
       apply Axiom 0, refl,
+      apply substitutable_for_idem,
       rw replace_formula_with_idem,
       apply Axiom 0, refl,
   }
@@ -791,8 +797,8 @@ def AllAndOut_L : Γ ▸ ((all n p) and (all n q)) → ((all n (p and q))::Γ) �
 
 def ExOrIn_ : (exi n (p or q)) ▸ ((exi n p) or (exi n q)) := begin
   apply DeMorganNotAnd_R,
-  apply Right_Rule_To_Not_Rule_R AllAndIn_R,
-  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganNotOr_R),
+  apply Rule_To_Not_Rule_R AllAndIn_R,
+  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganNotOr_R),
   apply Axiom 0, refl,
 end
 
@@ -801,8 +807,8 @@ def ExOrIn_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) :
 def ExOrIn_L : Γ ▸ (exi n (p or q)) → (((exi n p) or (exi n q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExOrIn_
 
 def ExOrOut_ : ((exi n p) or (exi n q)) ▸ (exi n (p or q)) := begin
-  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganAnd_R),
-  apply Right_Rule_To_Not_Rule_R AllAndOut_R,
+  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganAnd_R),
+  apply Rule_To_Not_Rule_R AllAndOut_R,
   apply DeMorganOr_R,
   apply Axiom 0, refl,
 end
@@ -812,8 +818,8 @@ def ExOrOut_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) 
 def ExOrOut_L : (Γ ▸ ((exi n p) or (exi n q))) → ((exi n (p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExOrOut_
 
 def ExAndOut_ : ((exi n p) and (exi n q)) ▸ (exi n (p and q))  := begin
-  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R DeMorganOr_R),
-  apply Right_Rule_To_Not_Rule_R AllOrOut_R,
+  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganOr_R),
+  apply Rule_To_Not_Rule_R AllOrOut_R,
   apply DeMorganAnd_R,
   apply Axiom 0, refl,
 end
@@ -829,9 +835,11 @@ def SwapAll_ : (all n (all m p)) ▸ (all m (all n p)) := begin
     rw replace_formula_with_idem,
   apply All_elim n (v n),
     apply Axiom 0, refl,
+    apply substitutable_for_idem,
     rw replace_formula_with_idem,
   apply All_elim m (v m),
     apply Axiom 0, refl,
+    apply substitutable_for_idem,
     rw replace_formula_with_idem,
   apply Axiom 0, refl,
 end
@@ -842,10 +850,10 @@ def SwapAll_L : Γ ▸ (all n (all m p)) → ((all m (all n p))::Γ) ▸ r → �
 
 def SwapEx_ : (exi n (exi m p)) ▸ (exi m (exi n p)) := begin
   simp,
-  apply Right_Rule_To_Not_Rule_R (Right_Rule_To_All_Rule_R Double_negation_intro_R),
-  apply Right_Rule_To_Not_Rule_L (Right_Rule_To_All_Rule_R Double_negation_elim_R),
+  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R Double_negation_intro_R),
+  apply Rule_To_Not_Rule_L (Rule_To_All_Rule_R Double_negation_elim_R),
   apply Axiom 0, refl,
-  apply Right_Rule_To_Not_Rule_R SwapAll_R,
+  apply Rule_To_Not_Rule_R SwapAll_R,
   apply Axiom 0, refl,
 end
 
