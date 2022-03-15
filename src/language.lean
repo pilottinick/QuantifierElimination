@@ -253,15 +253,15 @@ def occurs_in_term {L : language} (n : ℕ) : term L → Prop
 | (v m)        := n = m
 | (func _ t)   := ∃ i, occurs_in_term (t i)
 
-/- Def 1.5.2. If a variable is free in a formula -/
+/- The variable vₓ is free -/
 @[simp]
-def free {L : language} (n : ℕ) : formula L → Prop
+def free {L : language} (x : ℕ) : formula L → Prop
 | F                 := false
-| (t₁ ≃ t₂)         := (occurs_in_term n t₁) ∨ (occurs_in_term n t₂)
-| (rel rsymb args)  := ∃ i, occurs_in_term n (args i)
+| (t₁ ≃ t₂)         := (occurs_in_term x t₁) ∨ (occurs_in_term x t₂)
+| (rel rsymb args)  := ∃ i, occurs_in_term x (args i)
 | ∼φ                := free φ
 | (φ₁ or φ₂)        := free φ₁ ∨ free φ₂
-| (all m φ)         := ¬(m = n) ∧ free φ
+| (all m φ)         := ¬(m = x) ∧ free φ
 
 /- For all terms, there is a variable which does not occur in the term -/
 lemma for_all_term_ex_var_not_in_term : 

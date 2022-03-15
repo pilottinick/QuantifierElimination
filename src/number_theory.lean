@@ -46,8 +46,37 @@ lemma NT_succ_qe_ecl1 : qe_ecl1 NT_succ_Γ := begin
   intro φ,
   induction φ,
   { existsi (φ : qf NT_succ), refl },
-  { repeat { cases φ_ᾰ_1 },
-    repeat { sorry },
+  { cases φ_ᾰ_1, cases φ_ᾰ_1, cases φ_ᾰ_1,
+    { have h_free : ¬(@free NT_succ φ_ᾰ F) := by { intro, assumption, },
+      apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
+      existsi qf.f, refl,
+    },
+    { have h_free₁ : 
+      (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) := 
+        by apply em,
+      have h_free₂ : (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) := 
+        by apply em,
+      apply or.elim h_free₁,
+      all_goals { apply or.elim h_free₂ },
+      repeat { sorry },
+    },
+    { cases φ_ᾰ_1_ᾰ, },
+    cases φ_ᾰ_1,
+    { have h_free : ¬(@free NT_succ φ_ᾰ ∼F) := by { intro c, apply c, },
+      apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
+      existsi qf.n qf.f, refl,
+    },
+    { have h_free₁ : 
+      (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) := 
+        by apply em,
+      have h_free₂ : (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) := 
+        by apply em,
+      apply or.elim h_free₁,
+      all_goals { apply or.elim h_free₂ },
+      repeat { sorry },
+    },
+    { cases φ_ᾰ_1_ᾰ, },
+    { sorry },
   }
 end
 

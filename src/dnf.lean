@@ -18,7 +18,7 @@ def equiv_dcl (φ : formula L) : Prop := ∃ ψ : dcl L, Γ ▸ φ ↔ Γ ▸ ψ
 
 def equiv_dnf (φ : formula L) : Prop := ∃ ψ : dnf L, Γ ▸ φ ↔ Γ ▸ ψ
 
-def Equiv_Rule_To_equiv_dcl_Rule : (Γ ▸ p ↔ Γ ▸ q) → (equiv_dcl Γ p → equiv_dcl Γ q) := begin
+def Eq_equiv_dcl : (Γ ▸ p ↔ Γ ▸ q) → (equiv_dcl Γ p → equiv_dcl Γ q) := begin
    intros h₁ h₂,
    rcases h₂ with ⟨φ₃, h₃⟩,
    existsi φ₃,
@@ -29,7 +29,7 @@ def Equiv_Rule_To_equiv_dcl_Rule : (Γ ▸ p ↔ Γ ▸ q) → (equiv_dcl Γ p �
    apply h₁.mp (h₃.mpr h₄),
 end
 
-def Equiv_Rule_To_equiv_dnf_Rule : (Γ ▸ p ↔ Γ ▸ q) → (equiv_dnf Γ p → equiv_dnf Γ q) := begin
+def Eq_equiv_dnf : (Γ ▸ p ↔ Γ ▸ q) → (equiv_dnf Γ p → equiv_dnf Γ q) := begin
    intros h₁ h₂,
    rcases h₂ with ⟨φ₃, h₃⟩,
    existsi φ₃,
@@ -48,10 +48,10 @@ def neg_lit_equiv_lit : ∀ φ : lit L, Γ ▸ ∼↑φ ↔ Γ ▸ neg_lit _ φ 
   simp,
   split,
   intro h,
-  apply Double_negation_elim_R,
+  apply R_ Double_negation_elim,
   assumption,
   intro h,
-  apply Double_negation_intro_R,
+  apply R_ Double_negation_intro,
   assumption,
 end
 
@@ -60,13 +60,13 @@ def dcl_and_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl Γ (φ₁ and φ₂) 
   induction φ₁, induction φ₂,
   { existsi (cl.c φ₁ φ₂ : dcl L), refl },
   { rcases φ₂_ih_ᾰ with ⟨φ₂₁, h₂₁⟩, rcases φ₂_ih_ᾰ_1 with ⟨φ₂₂, h₂₂⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ ⟨DistributionAndOrOutLeft_R, DistributionAndOrInLeft_R⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ (Equiv_Rule_To_Or_Rule_R ⟨h₂₁.mpr, h₂₁.mp⟩ ⟨h₂₂.mpr, h₂₂.mp⟩),
+    apply Eq_equiv_dcl Γ ⟨R_ DistributionAndOrOutLeft, R_ DistributionAndOrInLeft⟩,
+    apply Eq_equiv_dcl Γ (R_Eq_Or_ ⟨h₂₁.mpr, h₂₁.mp⟩ ⟨h₂₂.mpr, h₂₂.mp⟩),
     existsi dcl.d φ₂₁ φ₂₂, refl,
   },
   { rcases φ₁_ih_ᾰ with ⟨φ₁₁, h₁₁⟩, rcases φ₁_ih_ᾰ_1 with ⟨φ₁₂, h₁₂⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ ⟨DistributionAndOrOutRight_R, DistributionAndOrInRight_R⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ (Equiv_Rule_To_Or_Rule_R ⟨h₁₁.mpr, h₁₁.mp⟩ ⟨h₁₂.mpr, h₁₂.mp⟩),
+    apply Eq_equiv_dcl Γ ⟨R_ DistributionAndOrOutRight, R_ DistributionAndOrInRight⟩,
+    apply Eq_equiv_dcl Γ (R_Eq_Or_ ⟨h₁₁.mpr, h₁₁.mp⟩ ⟨h₁₂.mpr, h₁₂.mp⟩),
     existsi dcl.d φ₁₁ φ₁₂, refl,
   }
 end
@@ -78,18 +78,16 @@ def dcl_not_equiv_dcl : ∀ φ : dcl L, equiv_dcl Γ ∼φ := begin
   { rcases φ_ih_ᾰ with ⟨φ₁, h₁⟩, rcases φ_ih_ᾰ_1 with ⟨φ₂, h₂⟩,
     existsi dcl.d φ₁ φ₂, split,
     intro h,
-    apply Rule_To_Left_Or_Rule_R h₁.mp,
-    apply Rule_To_Right_Or_Rule_R h₂.mp,
-    apply DeMorganNotAnd_R, apply h,
+    apply R_Or_ h₁.mp h₂.mp,
+    apply R_ DeMorganNotAnd, apply h,
     intro h,
-    apply DeMorganOr_R,
-    apply Rule_To_Left_Or_Rule_R h₁.mpr,
-    apply Rule_To_Right_Or_Rule_R h₂.mpr,
+    apply R_ DeMorganOr,
+    apply R_Or_ h₁.mpr h₂.mpr,
     apply h,
   },
   { rcases φ_ih_ᾰ with ⟨φ₁, h₁⟩, rcases φ_ih_ᾰ_1 with ⟨φ₂, h₂⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ ⟨DeMorganAnd_R, DeMorganNotOr_R⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ (Equiv_Rule_To_And_Rule_R ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
+    apply Eq_equiv_dcl Γ ⟨R_ DeMorganAnd, R_ DeMorganNotOr⟩,
+    apply Eq_equiv_dcl Γ (R_Eq_And_ ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
     apply dcl_and_equiv_dcl
   }
 end
@@ -106,10 +104,10 @@ def qf_equiv_dcl : ∀ φ : qf L, equiv_dcl Γ φ := begin
   { existsi (@atom.e L φ_ᾰ φ_ᾰ_1 : dcl L), refl },
   { existsi (@atom.r L φ_n φ_ᾰ φ_ᾰ_1 : dcl L), refl },
   { rcases φ_ih with ⟨φ, h⟩, 
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ (Equiv_Rule_To_Not_Rule_R ⟨h.mpr, h.mp⟩), 
+    apply Eq_equiv_dcl Γ (R_Eq_Not_ ⟨h.mpr, h.mp⟩), 
     apply dcl_not_equiv_dcl, },
   { rcases φ_ih_ᾰ with ⟨φ₁, h₁⟩, rcases φ_ih_ᾰ_1 with ⟨φ₂, h₂⟩,
-    apply Equiv_Rule_To_equiv_dcl_Rule Γ (Equiv_Rule_To_Or_Rule_R ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
+    apply Eq_equiv_dcl Γ (R_Eq_Or_ ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
     apply dcl_or_equiv_dcl },
 end
 
@@ -124,14 +122,14 @@ def dnf_not_equiv_dnf : ∀ φ : dnf L, equiv_dnf Γ ∼φ := begin
   intro φ,
   induction φ,
   { apply equiv_dcl_equiv_dnf, apply dcl_not_equiv_dcl },
-  { apply Equiv_Rule_To_equiv_dnf_Rule Γ ⟨ExNot_R, NotAll_R⟩, 
+  { apply Eq_equiv_dnf Γ ⟨R_ ExNot, R_ NotAll⟩, 
     rcases φ_ih with ⟨φ, h⟩,
-    apply Equiv_Rule_To_equiv_dnf_Rule Γ (Equiv_Rule_To_Ex_Rule_R ⟨h.mpr, h.mp⟩), simp,
+    apply Eq_equiv_dnf Γ (R_Eq_Ex_ ⟨h.mpr, h.mp⟩), simp,
     existsi dnf.ex φ_ᾰ φ, refl
   },
-  { apply Equiv_Rule_To_equiv_dnf_Rule Γ ⟨AllNot_R, NotEx_R⟩,
+  { apply Eq_equiv_dnf Γ ⟨R_ AllNot, R_ NotEx⟩,
     rcases φ_ih with ⟨φ, h⟩,
-    apply Equiv_Rule_To_equiv_dnf_Rule Γ (Equiv_Rule_To_All_Rule_R ⟨h.mpr, h.mp⟩),
+    apply Eq_equiv_dnf Γ (R_Eq_All_ ⟨h.mpr, h.mp⟩),
     existsi dnf.al φ_ᾰ φ, refl
   }
 end
@@ -158,13 +156,13 @@ def for_all_equiv_dnf : ∀ φ : formula L, equiv_dnf Γ φ := begin
   { existsi (@atom.e L φ_ᾰ φ_ᾰ_1 : dnf L), refl },
   { existsi (@atom.r L φ_n φ_ᾰ φ_ᾰ_1 : dnf L), refl },
   { rcases φ_ih with ⟨φ, h⟩, 
-    apply Equiv_Rule_To_equiv_dnf_Rule Γ (Equiv_Rule_To_Not_Rule_R ⟨h.mpr, h.mp⟩), 
+    apply Eq_equiv_dnf Γ (R_Eq_Not_ ⟨h.mpr, h.mp⟩), 
     apply dnf_not_equiv_dnf, },
   { rcases φ_ih_ᾰ with ⟨φ₁, h₁⟩, rcases φ_ih_ᾰ_1 with ⟨φ₂, h₂⟩,
-    apply Equiv_Rule_To_equiv_dnf_Rule Γ (Equiv_Rule_To_Or_Rule_R ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
+    apply Eq_equiv_dnf Γ (R_Eq_Or_ ⟨h₁.mpr, h₁.mp⟩ ⟨h₂.mpr, h₂.mp⟩),
     apply dnf_or_equiv_dnf },
   { rcases φ_ih with ⟨φ, h⟩, 
-    apply Equiv_Rule_To_equiv_dnf_Rule Γ (Equiv_Rule_To_All_Rule_R ⟨h.mpr, h.mp⟩),
+    apply Eq_equiv_dnf Γ (R_Eq_All_ ⟨h.mpr, h.mp⟩),
     apply dnf_all_equiv_dnf }
 end
 

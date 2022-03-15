@@ -107,7 +107,7 @@ def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
   end
 
 -- Converting natural deduction rules into sequent calculus rules
-def To_Right_Rule : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
+def R_ : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
     intros pq Γp,
     apply Cut,
     apply Γp,
@@ -139,14 +139,22 @@ def To_Right_Rule_List (l : list (formula L)) : ((h::l) ▸ q) → ∀ Γ : list
   end
 
 
-def To_Left_Rule : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begin
+def L_ : (p ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begin
     intros h1 h2 h3,
     apply Cut,
-    apply To_Right_Rule,
+    apply R_,
     apply h1,
     apply h2,
     apply h3,
   end
+
+def L_R_ : (Γ ▸ p → Γ ▸ q) → Γ ▸ p → (q::Γ) ▸ r → Γ ▸ r := begin
+  intros h1 h2 h3,
+  apply Cut,
+  apply h1,
+  apply h2,
+  apply h3,
+end
 
 def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   intro h, simp,
@@ -171,48 +179,42 @@ def Proves_impl : ((p::Γ) ▸ q) → Γ ▸ (p ⇒ q) := begin
   apply h1,
 end
 
-def To_Not_Rule_ : p ▸ q → ∼p ▸ ∼q := sorry
+def R_Not_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
 
-def Rule_To_Not_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → Γ ▸ ∼q) := sorry
+def R_Eq_Not_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ ∼p ↔ Γ ▸ ∼q) := sorry
 
-def Equiv_Rule_To_Not_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ ∼p ↔ Γ ▸ ∼q) := sorry
+def R_Left_Or_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
 
-def Rule_To_Not_Rule_L : (Γ ▸ p → Γ ▸ q) → (Γ ▸ ∼p → (∼q::Γ) ▸ r → Γ ▸ r) := sorry
+def R_Eq_Left_Or_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p or r) ↔ Γ ▸ (q or r)) := sorry
 
-def Rule_To_Left_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p or r) → Γ ▸ (q or r)) := sorry
+def R_Right_Or_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
 
-def Equiv_Rule_To_Left_Or_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p or r) ↔ Γ ▸ (q or r)) := sorry
+def R_Eq_Right_Or_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (r or p) ↔ Γ ▸ (r or q)) := sorry
 
-def Rule_To_Right_Or_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r or p) → Γ ▸ (r or q)) := sorry
+def R_Or_ : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
 
-def Equiv_Rule_To_Right_Or_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (r or p) ↔ Γ ▸ (r or q)) := sorry
+def R_Eq_Or_ : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) ↔ (Γ ▸ (q₁ or q₂))) := sorry
 
-def Rule_To_Or_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) → (Γ ▸ (q₁ or q₂))) := sorry
+def R_Left_And_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
 
-def Equiv_Rule_To_Or_Rule_R : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ or p₂) ↔ (Γ ▸ (q₁ or q₂))) := sorry
+def R_Eq_Left_And_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p and r) ↔ Γ ▸ (q and r)) := sorry
 
-def Rule_To_Left_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (p and r) → Γ ▸ (q and r)) := sorry
+def R_Right_And_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
 
-def Equiv_Rule_To_Left_And_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (p and r) ↔ Γ ▸ (q and r)) := sorry
+def R_And_ : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
 
-def Rule_To_Right_And_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (r and p) → Γ ▸ (r and q)) := sorry
+def R_Eq_And_ : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) ↔ (Γ ▸ (q₁ and q₂))) := sorry
 
-def Rule_To_And_Rule_R : (Γ ▸ p₁ → Γ ▸ q₁) → (Γ ▸ p₂ → Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) → (Γ ▸ (q₁ and q₂))) := sorry
+def R_All_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (all n p) → Γ ▸ (all n q)) := sorry
 
-def Equiv_Rule_To_And_Rule_R : (Γ ▸ p₁ ↔ Γ ▸ q₁) → (Γ ▸ p₂ ↔ Γ ▸ q₂) → (Γ ▸ (p₁ and p₂) ↔ (Γ ▸ (q₁ and q₂))) := sorry
+def R_Eq_All_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (all n p) ↔ Γ ▸ (all n q)) := sorry
 
-def Rule_To_All_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (all n p) → Γ ▸ (all n q)) := sorry
+def R_Ex_ : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (exi n p) → Γ ▸ (exi n q)) := sorry 
 
-def Equiv_Rule_To_All_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (all n p) ↔ Γ ▸ (all n q)) := sorry
-
-def Rule_To_All_Rule_L : (Γ ▸ p → Γ ▸ q) → ((Γ ▸ (all n p)) → ((all n q)::Γ) ▸ r → Γ ▸ r) := sorry 
-
-def Rule_To_Ex_Rule_R : (Γ ▸ p → Γ ▸ q) → (Γ ▸ (exi n p) → Γ ▸ (exi n q)) := sorry 
-
-def Equiv_Rule_To_Ex_Rule_R : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (exi n p) ↔ Γ ▸ (exi n q)) := sorry 
+def R_Eq_Ex_ : (Γ ▸ p ↔ Γ ▸ q) → (Γ ▸ (exi n p) ↔ Γ ▸ (exi n q)) := sorry 
 
 -- Basic intro and elim ND rules
-def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
+def Not_intro : (p ⇒ F) ▸ ∼p := begin
     apply Or_elim,
     apply Axiom 0, refl,
     apply Axiom 0, refl,
@@ -220,68 +222,41 @@ def Not_intro_ : (p ⇒ F) ▸ ∼p := begin
     apply Axiom 0, refl,
   end
 
-def Not_intro : Γ ▸ (p ⇒ F) → Γ ▸ ∼p := To_Right_Rule Not_intro_
-
-def Not_impl_ : ∼p ▸ (p ⇒ F) := begin
+def Not_impl : ∼p ▸ (p ⇒ F) := begin
   apply Or_intro_left,
   apply Axiom 0, refl,
 end
 
-def Not_impl : Γ ▸ ∼p → Γ ▸ (p ⇒ F) := To_Right_Rule Not_impl_
-
-def Impl_not_ : (p ⇒ F) ▸ ∼p := begin
+def Impl_not : (p ⇒ F) ▸ ∼p := begin
   apply Or_elim,
   apply Axiom 0, refl,
   apply Axiom 0, refl,
-  apply Not_intro,
+  apply R_ Not_intro,
   apply Axiom 1, refl,
 end
 
-def Impl_not : Γ ▸ (p ⇒ F) → Γ ▸ ∼p := To_Right_Rule Impl_not_
-
-def Double_negation_elim_ : ∼∼p ▸ p := begin
+def Double_negation_elim : ∼∼p ▸ p := begin
     apply (By_contradiction p),
     apply Not_elim,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
   end
 
-def Double_negation_elim_R : Γ ▸ ∼∼p → Γ ▸ p := To_Right_Rule Double_negation_elim_
-
-def Double_negation_elim_L : Γ ▸ ∼∼p → (p::Γ) ▸ r → Γ ▸ r := To_Left_Rule Double_negation_elim_
-
-def Double_negation_intro_ : p ▸ ∼∼p := begin
-    apply Not_intro,
+def Double_negation_intro : p ▸ ∼∼p := begin
+    apply R_ Not_intro,
     apply Proves_impl,
     apply Not_elim,
     apply Axiom 0, refl,
     apply Axiom 1, refl,
   end
 
-def Double_negation_intro_R : Γ ▸ p → Γ ▸ ∼∼p := To_Right_Rule Double_negation_intro_
-
-def Double_negation_intro_L : Γ ▸ p → (∼∼p::Γ) ▸ r → Γ ▸ r := To_Left_Rule Double_negation_intro_
-
-def Top_intro_ : p ▸ T := begin
+def Top_intro : p ▸ T := begin
   apply By_contradiction,
-  apply Double_negation_elim_R,
+  apply R_ Double_negation_elim,
   apply Axiom 0, refl,
 end
 
-def Top_intro_R : Γ ▸ p → Γ ▸ T := To_Right_Rule Top_intro_
-
-def Top_intro_L : Γ ▸ p → (T::Γ) ▸ r → Γ ▸ r := To_Left_Rule Top_intro_
-
-def By_contradiction_ : (∼p ⇒ F) ▸ p := begin
-    apply Or_elim,
-    apply Axiom 0, refl,
-    apply Double_negation_elim_R,
-    apply Axiom 0, refl,
-    apply Bot_elim,
-    apply Axiom 0, refl,
-  end
-
-def Impl_elim_ : [p, p ⇒ q] ▸ q := begin
+def Impl_elim : [p, p ⇒ q] ▸ q := begin
     apply Or_elim,
     apply Axiom 1, refl,
     apply Not_elim,
@@ -294,11 +269,11 @@ def Impl_elim : (Γ ▸ p) → (Γ ▸ (p ⇒ q)) → (Γ ▸ q) := begin
     intros h1 h2,
     apply Cut,
     apply h2,
-    apply To_Right_Rule_List _ _ Impl_elim_,
+    apply To_Right_Rule_List _ _ Impl_elim,
   end
 
-def And_intro_ : [p, q] ▸ (p and q) := begin
-    apply Not_intro,
+def And_intro : [p, q] ▸ (p and q) := begin
+    apply R_ Not_intro,
     apply Proves_impl,
     apply Or_elim,
     apply Axiom 0, refl,
@@ -310,15 +285,15 @@ def And_intro_ : [p, q] ▸ (p and q) := begin
     apply Axiom 3, refl,
   end
 
-def And_intro : Γ ▸ p → Γ ▸ q → Γ ▸ (p and q) := begin
+def And_intro_R : Γ ▸ p → Γ ▸ q → Γ ▸ (p and q) := begin
     intros h1 h2,
     apply Cut,
     apply h2,
-    apply To_Right_Rule_List _ _ And_intro_,
+    apply To_Right_Rule_List _ _ And_intro,
     apply h1,
   end
 
-def And_elim_left_ : (p and q) ▸ p := begin
+def And_elim_left : (p and q) ▸ p := begin
       apply By_contradiction,
       apply Not_elim,
       apply Axiom 1, refl,
@@ -326,11 +301,7 @@ def And_elim_left_ : (p and q) ▸ p := begin
       apply Axiom 0, refl,
     end
 
-def And_elim_left_R : Γ ▸ (p and q) → Γ ▸ p := To_Right_Rule And_elim_left_
-
-def And_elim_left_L : Γ ▸ (p and q) → (p::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_left_
-
-def And_elim_right_ : (p and q) ▸ q := begin
+def And_elim_right : (p and q) ▸ q := begin
       apply By_contradiction,
       apply Not_elim,
       apply Axiom 1, refl,
@@ -338,54 +309,40 @@ def And_elim_right_ : (p and q) ▸ q := begin
       apply Axiom 0, refl,
     end
 
-def And_elim_right_R : Γ ▸ (p and q) → Γ ▸ q := To_Right_Rule And_elim_right_
-
-def And_elim_right_L : Γ ▸ (p and q) → (q::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_elim_right_
-
-def NonContradiction_ : (p and ∼p) ▸ F := begin
+def NonContradiction : (p and ∼p) ▸ F := begin
     apply Not_elim,
-    apply And_elim_right_,
-    apply And_elim_left_,
+    apply And_elim_right,
+    apply And_elim_left,
   end
 
-def NonContradiction : Γ ▸ (p and ∼p) → Γ ▸ F := To_Right_Rule NonContradiction_
-
 -- DeMorgan laws
-def DeMorganNotAnd_ : ∼(p and q) ▸ (∼p or ∼q) := begin
+def DeMorganNotAnd : ∼(p and q) ▸ (∼p or ∼q) := begin
     apply By_contradiction,
     apply Not_elim,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
   end
 
-def DeMorganNotAnd_R : Γ ▸ ∼(p and q) → Γ ▸ (∼p or ∼q) := To_Right_Rule DeMorganNotAnd_
-
-def DeMorganNotAnd_L : Γ ▸ ∼(p and q) → ((∼p or ∼q)::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganNotAnd_ 
-
-def DeMorganNotOr_ : ∼(p or q) ▸ (∼p and ∼q) := begin
-    apply Not_intro,
+def DeMorganNotOr : ∼(p or q) ▸ (∼p and ∼q) := begin
+    apply R_ Not_intro,
     apply Proves_impl,
     apply Not_elim,
     apply Axiom 1, refl,
     apply Or_elim,
     apply Axiom 0, refl,
     apply Or_intro_left,
-    apply Double_negation_elim_R,
+    apply R_ Double_negation_elim,
     apply Axiom 0, refl,
     apply Or_intro_right,
-    apply Double_negation_elim_R,
+    apply R_ Double_negation_elim,
     apply Axiom 0, refl,
   end
 
-def DeMorganNotOr_R : Γ ▸ ∼(p or q) → Γ ▸ (∼p and ∼q) := To_Right_Rule DeMorganNotOr_
-
-def DeMorganNotOr_L : Γ ▸ ∼(p or q) → ((∼p and ∼q)::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganNotOr_
-
-def ExcludedMiddle_ : p ▸ (q or ∼q) := begin
+def ExcludedMiddle : p ▸ (q or ∼q) := begin
   apply By_contradiction,
-  apply DeMorganNotOr_L,
+  apply L_ DeMorganNotOr,
   apply Axiom 0, refl,
-  apply And_elim_left_L,
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
   apply Not_elim,
   apply Axiom 2, refl,
@@ -393,111 +350,91 @@ def ExcludedMiddle_ : p ▸ (q or ∼q) := begin
   apply Axiom 0, refl,
 end
 
-def ExcludedMiddle_R : Γ ▸ p → Γ ▸ (p or ∼p) := To_Right_Rule ExcludedMiddle_
-
-def ExcludedMiddle_L : Γ ▸ p → ((p or ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExcludedMiddle_
-
-def DeMorganOr_ : (∼p or ∼q) ▸ ∼(p and q) := begin
-    apply Not_intro,
+def DeMorganOr : (∼p or ∼q) ▸ ∼(p and q) := begin
+    apply R_ Not_intro,
     apply Proves_impl,
     apply Or_elim,
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 0, refl,
-    apply And_elim_left_L,
+    apply L_ And_elim_left,
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
-    apply And_elim_right_L,
+    apply L_ And_elim_right,
     apply Axiom 1, refl,
     apply Not_elim,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
   end
 
-def DeMorganOr_R : Γ ▸ (∼p or ∼q) → Γ ▸ ∼(p and q) := To_Right_Rule DeMorganOr_
-
-def DeMorganOr_L : Γ ▸ (∼p or ∼q) → ((∼(p and q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganOr_
-
-def DeMorganAnd_ : (∼p and ∼q) ▸ ∼(p or q) := begin
+def DeMorganAnd : (∼p and ∼q) ▸ ∼(p or q) := begin
   apply By_contradiction,
-  apply Double_negation_elim_L,
+  apply L_ Double_negation_elim,
   apply Axiom 0, refl,
   apply Or_elim,
   apply Axiom 0, refl,
-  apply And_elim_left_L,
+  apply L_ And_elim_left,
   apply Axiom 3, refl,
   apply Not_elim,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
-  apply And_elim_right_L,
+  apply L_ And_elim_right,
   apply Axiom 3, refl,
   apply Not_elim,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
 end
 
-def DeMorganAnd_R : Γ ▸ (∼p and ∼q) → Γ ▸ ∼(p or q) := To_Right_Rule DeMorganAnd_
-
-def DeMorganAnd_L : Γ ▸ (∼p and ∼q) → ((∼(p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule DeMorganAnd_
-
 -- Distribution of and and or
 -- TODO: Right now there are 8 distribution rules, is there any way to simplify this?
-def DistributionAndOrInLeft_ : (r and (p or q)) ▸ ((r and p) or (r and q)) := begin
-    apply And_elim_right_L,
+def DistributionAndOrInLeft : (r and (p or q)) ▸ ((r and p) or (r and q)) := begin
+    apply L_ And_elim_right,
     apply Axiom 0, refl,
-    apply And_elim_left_L,
+    apply L_ And_elim_left,
     apply Axiom 1, refl,
     apply Or_elim,
     apply Axiom 1, refl,
     apply Or_intro_left,
-    apply And_intro,
+    apply And_intro_R,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
     apply Or_intro_right,
-    apply And_intro,
+    apply And_intro_R,
     apply Axiom 1, refl,
     apply Axiom 0, refl,
   end
 
-def DistributionAndOrInLeft_R : Γ ▸ (r and (p or q)) → Γ ▸ ((r and p) or (r and q)):= To_Right_Rule DistributionAndOrInLeft_
-
-def DistributionAndOrInLeft_L : Γ ▸ (r and (p or q)) → (((r and p) or (r and q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrInLeft_
-
-def DistributionAndOrInRight_ : ((p or q) and r) ▸ ((p and r) or (q and r)) := begin
-  apply And_elim_left_L,
+def DistributionAndOrInRight : ((p or q) and r) ▸ ((p and r) or (q and r)) := begin
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
-  apply And_elim_right_L,
+  apply L_ And_elim_right,
   apply Axiom 1, refl,
   apply Or_elim,
   apply Axiom 1, refl,
   apply Or_intro_left,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
   apply Or_intro_right,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
 end
 
-def DistributionAndOrInRight_R : Γ ▸ ((p or q) and r) → Γ ▸ ((p and r) or (q and r)) := To_Right_Rule DistributionAndOrInRight_
-
-def DistributionAndOrInRight_L : Γ ▸ ((p or q) and r) → (((p and r) or (q and r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrInRight_
-
-def DistributionAndOrOutLeft_ : ((r and p) or (r and q)) ▸ (r and (p or q)) := begin
-  apply And_intro,
+def DistributionAndOrOutLeft : ((r and p) or (r and q)) ▸ (r and (p or q)) := begin
+  apply And_intro_R,
   apply Or_elim,
   apply Axiom 0, refl,
   any_goals { by {
-    apply And_elim_left_L,
+    apply L_ And_elim_left,
     repeat { apply Axiom 0, refl, }
   } },
   apply Or_elim,
   apply Axiom 0, refl,
   any_goals { by {
-    apply And_elim_right_L,
+    apply L_ And_elim_right,
     apply Axiom 0, refl,
     { apply Or_intro_left, apply Axiom 0, refl } 
       <|>
@@ -505,16 +442,12 @@ def DistributionAndOrOutLeft_ : ((r and p) or (r and q)) ▸ (r and (p or q)) :=
   } },
 end
 
-def DistributionAndOrOutLeft_R : Γ ▸ ((r and p) or (r and q)) → Γ ▸ (r and (p or q)) := To_Right_Rule DistributionAndOrOutLeft_
-
-def DistributionAndOrOutLeft_L : Γ ▸ ((r and p) or (r and q)) → ((r and (p or q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrOutLeft_
-
-def DistributionAndOrOutRight_ : ((p and r) or (q and r)) ▸ ((p or q) and r) := begin
-  apply And_intro,
+def DistributionAndOrOutRight : ((p and r) or (q and r)) ▸ ((p or q) and r) := begin
+  apply And_intro_R,
   apply Or_elim,
   apply Axiom 0, refl,
   any_goals { 
-    apply And_elim_left_L,
+    apply L_ And_elim_left,
     apply Axiom 0, refl,
     { apply Or_intro_left, apply Axiom 0, refl }
       <|>
@@ -523,49 +456,41 @@ def DistributionAndOrOutRight_ : ((p and r) or (q and r)) ▸ ((p or q) and r) :
   apply Or_elim,
   apply Axiom 0, refl,
   all_goals {
-    apply And_elim_right_L,
+    apply L_ And_elim_right,
     repeat { apply Axiom 0, refl },
   },
 end
 
-def DistributionAndOrOutRight_R : Γ ▸ ((p and r) or (q and r)) → Γ ▸ ((p or q) and r) := To_Right_Rule DistributionAndOrOutRight_
-
-def DistributionAndOrOutRight_L : Γ ▸ ((p and r) or (q and r)) → (((p or q) and r)::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionAndOrOutRight_
-
-def DistributionOrAndInLeft_ : (r or (p and q)) ▸ ((r or p) and (r or q)) := begin
+def DistributionOrAndInLeft : (r or (p and q)) ▸ ((r or p) and (r or q)) := begin
     apply Or_elim, 
     apply Axiom 0, refl,
-    apply And_intro,
+    apply And_intro_R,
     apply Or_intro_left,
     apply Axiom 0, refl,
     apply Or_intro_left,
     apply Axiom 0, refl,
-    apply And_intro,
-    apply And_elim_left_L,
+    apply And_intro_R,
+    apply L_ And_elim_left,
     apply Axiom 0, refl,
     apply Or_intro_right,
     apply Axiom 0, refl,
-    apply And_elim_right_L,
+    apply L_ And_elim_right,
     apply Axiom 0, refl,
     apply Or_intro_right,
     apply Axiom 0, refl,
   end
 
-def DistributionOrAndInLeft_R : Γ ▸ (r or (p and q)) → Γ ▸ ((r or p) and (r or q)) := To_Right_Rule DistributionOrAndInLeft_
-
-def DistributionOrAndInLeft_L : Γ ▸ (r or (p and q)) → (((r or p) and (r or q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAndInLeft_
-
-def DistributionOrAndOutRight_ : ((p or r) and (q or r)) ▸ ((p and q) or r) := begin
-  apply And_elim_left_L,
+def DistributionOrAndOutRight : ((p or r) and (q or r)) ▸ ((p and q) or r) := begin
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
-  apply And_elim_right_L,
+  apply L_ And_elim_right,
   apply Axiom 1, refl,
   apply Or_elim,
   apply Axiom 0, refl,
   apply Or_elim,
   apply Axiom 2, refl,
   apply Or_intro_left,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
   all_goals {
@@ -574,14 +499,10 @@ def DistributionOrAndOutRight_ : ((p or r) and (q or r)) ▸ ((p and q) or r) :=
   },
 end
 
-def DistributionOrAndOutRight_R : Γ ▸ ((p or r) and (q or r)) → Γ ▸ ((p and q) or r) := To_Right_Rule DistributionOrAndOutRight_
-
-def DistributionOrAndOutRight_L : Γ ▸ ((p or r) and (q or r)) → (((p and q) or r)::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAndOutRight_
-
-def DistributionOrAndOutLeft_ : ((r or p) and (r or q)) ▸ (r or (p and q)) := begin
-  apply And_elim_left_L,
+def DistributionOrAndOutLeft : ((r or p) and (r or q)) ▸ (r or (p and q)) := begin
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
-  apply And_elim_right_L,
+  apply L_ And_elim_right,
   apply Axiom 1, refl,
   apply Or_elim,
   apply Axiom 0, refl,
@@ -592,38 +513,30 @@ def DistributionOrAndOutLeft_ : ((r or p) and (r or q)) ▸ (r or (p and q)) := 
   apply Or_intro_left,
   apply Axiom 0, refl,
   apply Or_intro_right,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
 end
 
-def DistributionOrAndOutLeft_R : Γ ▸ ((r or p) and (r or q)) → Γ ▸ (r or (p and q)) := To_Right_Rule DistributionOrAndOutLeft_
-
-def DistributionOrAndOutLeft_L : Γ ▸ ((r or p) and (r or q)) → ((r or (p and q))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAndOutLeft_
-
-def DistributionOrAndInRight_ : ((p or q) and r) ▸ ((p and r) or (q and r)) := begin
-  apply And_elim_left_L,
+def DistributionOrAndInRight : ((p or q) and r) ▸ ((p and r) or (q and r)) := begin
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
-  apply And_elim_right_L,
+  apply L_ And_elim_right,
   apply Axiom 1, refl,
   apply Or_elim,
   apply Axiom 1, refl,
   apply Or_intro_left,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
   apply Or_intro_right,
-  apply And_intro,
+  apply And_intro_R,
   apply Axiom 0, refl,
   apply Axiom 1, refl,
 end
-
-def DistributionOrAndInRight_R : Γ ▸ ((p or q) and r) → Γ ▸ ((p and r) or (q and r)) := To_Right_Rule DistributionOrAndInRight_
-
-def DistributionOrAndInRight_L : Γ ▸ ((p or q) and r) → (((p and r) or (q and r))::Γ) ▸ s → Γ ▸ s := To_Left_Rule DistributionOrAndInRight_
 
 -- Commutativity rules 
-def Or_comm_ : (p or q) ▸ (q or p) := begin
+def Or_comm : (p or q) ▸ (q or p) := begin
   apply Or_elim,
   apply Axiom 0, refl,
   apply Or_intro_right,
@@ -632,32 +545,24 @@ def Or_comm_ : (p or q) ▸ (q or p) := begin
   apply Axiom 0, refl,
 end
 
-def Or_comm_R : Γ ▸ (p or q) → Γ ▸ (q or p) := To_Right_Rule Or_comm_
-
-def Or_comm_L : Γ ▸ (p or q) → ((q or p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Or_comm_
-
 def And_comm_ : (p and q) ▸ (q and p) := begin
-  apply And_intro,
-  apply And_elim_right_L,
+  apply And_intro_R,
+  apply L_ And_elim_right,
   apply Axiom 0, refl,
   apply Axiom 0, refl,
-  apply And_elim_left_L,
+  apply L_ And_elim_left,
   apply Axiom 0, refl,
   apply Axiom 0, refl,
 end
-
-def And_comm_R : Γ ▸ (p and q) → Γ ▸ (q and p) := To_Right_Rule And_comm_
-
-def And_comm_L : Γ ▸ (p and q) → ((q and p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule And_comm_
 
 def AndProves : (Γ ▸ p) ∧ (Γ ▸ q) → (Γ ▸ (p and q)) := begin
     intros h,
-    apply And_intro,
+    apply And_intro_R,
     apply and.elim_left h,
     apply and.elim_right h,
   end
 
-def Contrapose_ : (p ⇒ q) ▸ (∼q ⇒ ∼p) := begin
+def Contrapose : (p ⇒ q) ▸ (∼q ⇒ ∼p) := begin
   simp,
   apply Or_elim,
   apply Axiom 0, refl,
@@ -669,65 +574,63 @@ def Contrapose_ : (p ⇒ q) ▸ (∼q ⇒ ∼p) := begin
   apply Axiom 1, refl,
 end
 
-def Contrapose_R : Γ ▸ (p ⇒ q) → Γ ▸ (∼q ⇒ ∼p) := To_Right_Rule Contrapose_
+def Ex_intro (n : ℕ) (t : term L) (φ : formula L) : 
+  substitutable_for t n φ → Γ ▸ (replace_formula_with n t φ) → Γ ▸ (exi n φ) := sorry
 
-def Contrapose_L : Γ ▸ (p ⇒ q) → ((∼q ⇒ ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Contrapose_
+def Ex_elim (n : ℕ) (t : term L) (φ : formula L) (ψ : formula L) : 
+  var_not_free_in_axioms m Γ → Γ ▸ (exi n φ) → ((replace_formula_with n (term.var m) φ)::Γ) ▸ ψ → Γ ▸ ψ := sorry
 
-def All_To_Ex_ : (all n p) ▸ ∼(exi n ∼p) := begin
-  apply Double_negation_intro_R,
-  apply Rule_To_All_Rule_R Double_negation_intro_R,
+def All_To_Ex : (all n p) ▸ ∼(exi n ∼p) := begin
+  apply R_ Double_negation_intro,
+  apply R_All_ (R_ Double_negation_intro),
   apply Axiom 0, refl,
 end
 
-def All_To_Ex_R : Γ ▸ (all n p) → Γ ▸ ∼(exi n ∼p) := To_Right_Rule All_To_Ex_
-
-def All_To_Ex_L : Γ ▸ (all n p) → (∼(exi n ∼p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule All_To_Ex_
-
-def Ex_To_All_ : ∼(exi n ∼p) ▸ (all n p) := begin
-  apply Rule_To_All_Rule_R Double_negation_elim_R,
-  apply Double_negation_elim_R,
+def Ex_To_All : ∼(exi n ∼p) ▸ (all n p) := begin
+  apply R_All_ (R_ Double_negation_elim),
+  apply R_ Double_negation_elim,
   apply Axiom 0, refl,
 end
 
-def Ex_To_All_R : Γ ▸ ∼(exi n ∼p) → Γ ▸ (all n p) := To_Right_Rule Ex_To_All_
-
-def Ex_To_All_L : Γ ▸ ∼(exi n ∼p) → ((all n p)::Γ) ▸ r → Γ ▸ r := To_Left_Rule Ex_To_All_
-
-def NotAll_ : ∼(all n p) ▸ (exi n ∼p) := begin
-  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R Double_negation_intro_R),
+def NotAll : ∼(all n p) ▸ (exi n ∼p) := begin
+  apply R_Not_ (R_All_ (R_ Double_negation_intro)),
   apply Axiom 0, refl,
 end
 
-def NotAll_R : (Γ ▸ ∼(all n p)) → (Γ ▸ (exi n ∼p)) := To_Right_Rule NotAll_
-
-def AllNot_ : (all n ∼p) ▸ ∼(exi n p) := begin
-  apply Double_negation_intro_R,
+def AllNot : (all n ∼p) ▸ ∼(exi n p) := begin
+  apply R_ Double_negation_intro,
   apply Axiom 0, refl,
 end
 
-def AllNot_R : (Γ ▸ (all n ∼p)) → (Γ ▸ ∼(exi n p)) := To_Right_Rule AllNot_  
-
-def NotEx_ : ∼(exi n p) ▸ (all n ∼p) := begin
-  apply Double_negation_elim_L,
+def NotEx : ∼(exi n p) ▸ (all n ∼p) := begin
+  apply L_ Double_negation_elim,
   apply Axiom 0, refl,
   apply Axiom 0, refl,
 end
 
-def NotEx_R : (Γ ▸ ∼(exi n p)) → (Γ ▸ (all n ∼p)) := To_Right_Rule NotEx_
-
-def ExNot_ : (exi n ∼p) ▸ ∼(all n p) := begin
-  apply Rule_To_Not_Rule_L (Rule_To_All_Rule_R Double_negation_elim_R),
+def ExNot : (exi n ∼p) ▸ ∼(all n p) := begin
+  apply L_R_ (R_Not_ (R_All_ (R_ Double_negation_elim))),
   apply Axiom 0, refl,
   apply Axiom 0, refl,
 end
 
-def ExNot_R : (Γ ▸ (exi n ∼p)) → (Γ ▸ ∼(all n p)) := To_Right_Rule ExNot_
+def NotFreeAll : ¬(free n p) → p ▸ (all n p) := begin
+  intro h,
+  apply All_intro,
+  simp, apply h,
+  rw replace_formula_with_idem,
+  apply Axiom 0, refl,
+end
 
-def AllLeftOrOut_ : ¬(free n q) → ((all n p) or q) ▸ (all n (p or q)) := sorry
+def AddAll : ¬(free n p) → Γ ▸ p → Γ ▸ (all n p) := sorry
 
-def AllRightOrOut_ : ∀ m ≠ n, (p or (all n q)) ▸ (all n (p or (replace_formula_with n (v m) q))) := sorry
+def RemoveAll : Γ ▸ (all n p) → Γ ▸ p := sorry
 
-def AllOrOut_ : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
+def AddEx : Γ ▸ p → Γ ▸ (exi n p) := sorry
+
+def RemoveEx : ¬(free n p) → Γ ▸ (exi n p) → Γ ▸ p := sorry
+
+def AllOrOut : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
   apply All_intro _ _ n, simp,
   rw replace_formula_with_idem,
   apply Or_elim, apply Axiom 0, refl,
@@ -742,11 +645,7 @@ def AllOrOut_ : ((all n p) or (all n q)) ▸ (all n (p or q)) := begin
   },
 end
 
-def AllOrOut_R : Γ ▸ ((all n p) or (all n q)) → Γ ▸ (all n (p or q)) := To_Right_Rule AllOrOut_
-
-def AllOrOut_L : Γ ▸ ((all n p) or (all n q)) → ((all n (p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule AllOrOut_
-
-def AllAndIn_ : all n (p and q) ▸ ((all n p) and (all n q)) := begin
+def AllAndIn : all n (p and q) ▸ ((all n p) and (all n q)) := begin
   apply AndProves, split,
   all_goals { 
     apply All_intro _ _ n, simp,
@@ -755,22 +654,18 @@ def AllAndIn_ : all n (p and q) ▸ ((all n p) and (all n q)) := begin
       apply Axiom 0, refl,
       apply substitutable_for_idem,
       rw replace_formula_with_idem,
-      { apply And_elim_right_R, apply Axiom 0, refl }
+      { apply R_ And_elim_right, apply Axiom 0, refl }
         <|> 
-      { apply And_elim_left_R, apply Axiom 0, refl, },
+      { apply R_ And_elim_left, apply Axiom 0, refl, },
   }
 end
 
-def AllAndIn_R : Γ ▸ (all n (p and q)) → (Γ ▸ ((all n p) and (all n q))) := To_Right_Rule AllAndIn_
-
-def AllAndIn_L : Γ ▸ all n (p and q) → (((all n p) and (all n q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule AllAndIn_
-
-def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
+def AllAndOut : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
   apply All_intro _ _ n, simp,
   rw replace_formula_with_idem,
-  apply And_intro,
+  apply And_intro_R,
   { 
-    apply And_elim_left_L, 
+    apply L_ And_elim_left, 
     apply Axiom 0, 
     refl,
     apply All_elim n (v n),
@@ -780,7 +675,7 @@ def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
       apply Axiom 0, refl,
   },
   {
-    apply And_elim_right_L, 
+    apply L_ And_elim_right, 
     apply Axiom 0, 
     refl,
     apply All_elim n (v n),
@@ -791,44 +686,28 @@ def AllAndOut_ : ((all n p) and (all n q)) ▸ (all n (p and q)) := begin
   }
 end
 
-def AllAndOut_R : (Γ ▸ ((all n p) and (all n q))) → (Γ ▸ (all n (p and q))) := To_Right_Rule AllAndOut_
-
-def AllAndOut_L : Γ ▸ ((all n p) and (all n q)) → ((all n (p and q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule AllAndOut_
-
-def ExOrIn_ : (exi n (p or q)) ▸ ((exi n p) or (exi n q)) := begin
-  apply DeMorganNotAnd_R,
-  apply Rule_To_Not_Rule_R AllAndIn_R,
-  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganNotOr_R),
+def ExOrIn : (exi n (p or q)) ▸ ((exi n p) or (exi n q)) := begin
+  apply R_ DeMorganNotAnd,
+  apply R_Not_ (R_ AllAndIn),
+  apply R_Not_ (R_All_ (R_ DeMorganNotOr)),
   apply Axiom 0, refl,
 end
 
-def ExOrIn_R : (Γ ▸ (exi n (p or q))) → (Γ ▸ ((exi n p) or (exi n q))) := To_Right_Rule ExOrIn_
-
-def ExOrIn_L : Γ ▸ (exi n (p or q)) → (((exi n p) or (exi n q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExOrIn_
-
-def ExOrOut_ : ((exi n p) or (exi n q)) ▸ (exi n (p or q)) := begin
-  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganAnd_R),
-  apply Rule_To_Not_Rule_R AllAndOut_R,
-  apply DeMorganOr_R,
+def ExOrOut : ((exi n p) or (exi n q)) ▸ (exi n (p or q)) := begin
+  apply R_Not_ (R_All_ (R_ DeMorganAnd)),
+  apply R_Not_ (R_ AllAndOut),
+  apply R_ DeMorganOr,
   apply Axiom 0, refl,
 end
 
-def ExOrOut_R : (Γ ▸ ((exi n p) or (exi n q))) → (Γ ▸ (exi n (p or q))) := To_Right_Rule ExOrOut_
-
-def ExOrOut_L : (Γ ▸ ((exi n p) or (exi n q))) → ((exi n (p or q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExOrOut_
-
-def ExAndOut_ : ((exi n p) and (exi n q)) ▸ (exi n (p and q))  := begin
-  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R DeMorganOr_R),
-  apply Rule_To_Not_Rule_R AllOrOut_R,
-  apply DeMorganAnd_R,
+def ExAndOut : ((exi n p) and (exi n q)) ▸ (exi n (p and q))  := begin
+  apply R_Not_ (R_All_ (R_ DeMorganOr)),
+  apply R_Not_ (R_ AllOrOut),
+  apply R_ DeMorganAnd,
   apply Axiom 0, refl,
 end
 
-def ExAndOut_R : (Γ ▸ ((exi n p) and (exi n q))) → (Γ ▸ (exi n (p and q))) := To_Right_Rule ExAndOut_
-
-def ExAndOut_L : Γ ▸ ((exi n p) and (exi n q)) → ((exi n (p and q))::Γ) ▸ r → Γ ▸ r := To_Left_Rule ExAndOut_
-
-def SwapAll_ : (all n (all m p)) ▸ (all m (all n p)) := begin
+def SwapAll : (all n (all m p)) ▸ (all m (all n p)) := begin
   apply All_intro _ _ m, simp,
     rw replace_formula_with_idem,
   apply All_intro _ _ n, simp,
@@ -844,22 +723,14 @@ def SwapAll_ : (all n (all m p)) ▸ (all m (all n p)) := begin
   apply Axiom 0, refl,
 end
 
-def SwapAll_R : (Γ ▸ (all n (all m p))) → (Γ ▸ (all m (all n p))) := To_Right_Rule SwapAll_
-
-def SwapAll_L : Γ ▸ (all n (all m p)) → ((all m (all n p))::Γ) ▸ r → Γ ▸ r := To_Left_Rule SwapAll_
-
-def SwapEx_ : (exi n (exi m p)) ▸ (exi m (exi n p)) := begin
+def SwapEx : (exi n (exi m p)) ▸ (exi m (exi n p)) := begin
   simp,
-  apply Rule_To_Not_Rule_R (Rule_To_All_Rule_R Double_negation_intro_R),
-  apply Rule_To_Not_Rule_L (Rule_To_All_Rule_R Double_negation_elim_R),
+  apply R_Not_ (R_All_ (R_ Double_negation_intro)),
+  apply L_R_ (R_Not_ (R_All_ (R_ Double_negation_elim))),
   apply Axiom 0, refl,
-  apply Rule_To_Not_Rule_R SwapAll_R,
+  apply R_Not_ (R_ SwapAll),
   apply Axiom 0, refl,
 end
-
-def SwapEx_R : (Γ ▸ (exi n (exi m p))) → (Γ ▸ (exi m (exi n p))) := To_Right_Rule SwapEx_
-
-def SwapEx_L : Γ ▸ (exi n (exi m p)) → ((exi m (exi n p))::Γ) ▸ r → Γ ▸ r := To_Left_Rule SwapEx_
 
 -- def SwapAllEx_R : (Γ ▸ ∼(all n (exi m ∼p))) → (Γ ▸ (exi m (all n p))) := sorry
 
