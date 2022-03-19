@@ -283,26 +283,19 @@ begin
   repeat { sorry },
 end
 
-/- The variable x is not free in axioms Γ -/
+/- The variable x is not free at position n of Γ -/
 @[simp]
-def var_not_free_in_axioms {L : language} (x : ℕ) (Γ : ℕ → formula L) : Prop
-  := ∀ m : ℕ, ¬(free x (Γ m))
+def nth_not_free {L : language} (x : ℕ) (n : ℕ) (Γ : list (formula L)) : Prop
+  := match Γ.nth n with
+     | none   := true
+     | some φ := ¬(free n φ)
+     end
 
-lemma var_not_free_in_axioms_cons {L : language} : 
-  ∀ (x : ℕ) (φ : formula L) (Γ : ℕ → formula L), 
-    (var_not_free_in_axioms x (λ n, φ) ∧ var_not_free_in_axioms x Γ) → 
-     var_not_free_in_axioms x (φ::Γ) := begin
-  intros x φ Γ h m hf,
-  have h₁ := h.left,
-  have h₂ := h.right,
-  cases m,
-  simp at h₁,
-  simp at hf,
-  contradiction,
-  simp at hf,
-  simp at h₂,
-  apply (h₂ m) hf,
-end
+/- The variable x is not free in axioms A and the context Γ -/
+@[simp]
+def var_not_free_in_context {L : language} (x : ℕ)  (α : Type) (Γ : list (formula L)) 
+  [has_coe α (formula L)] : Prop := 
+  (∀ a : α, ¬(free x ↑a)) ∧ (∀ n : ℕ, (nth_not_free x n Γ))
 
 /-- Replace the variable vₓ with the term t -/
 @[simp]

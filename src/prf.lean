@@ -7,80 +7,78 @@ section prf
 
 variables {L : language} {n m : ℕ}
 
-inductive Prf : (ℕ → (formula L)) → formula L → Prop
-| Axiom : ∀ {Γ : ℕ → (formula L)} n φ, Γ n = φ → Prf Γ φ
-| Bot_elim : ∀ {Γ : ℕ → (formula L)} φ, Prf Γ F → Prf Γ φ
-| Not_elim : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ∼φ → Prf Γ φ → Prf Γ ψ
-| By_contradiction : ∀ {Γ : ℕ → (formula L)} φ, Prf (∼φ::Γ) F → Prf Γ φ
-| Or_intro_left : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
-| Or_intro_right : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
-| Or_elim : ∀ {Γ : ℕ → (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| All_intro : ∀ {Γ : ℕ → (formula L)} φ n m, var_not_free_in_axioms m Γ → 
+inductive Prf (A : Type) [has_coe A (formula L)] : list (formula L) → formula L → Prop
+| Axiom : ∀ {Γ : list (formula L)} a φ, a = φ → Prf Γ φ
+| Assumption : ∀ {Γ : list (formula L)} n φ, Γ.nth n = some φ → Prf Γ φ
+| Bot_elim : ∀ {Γ : list (formula L)} φ, Prf Γ F → Prf Γ φ
+| Not_elim : ∀ {Γ : list (formula L)} φ ψ, Prf Γ ∼φ → Prf Γ φ → Prf Γ ψ
+| By_contradiction : ∀ {Γ : list (formula L)} φ, Prf (∼φ::Γ) F → Prf Γ φ
+| Or_intro_left : ∀ {Γ : list (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
+| Or_intro_right : ∀ {Γ : list (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
+| Or_elim : ∀ {Γ : list (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
+| All_intro : ∀ {Γ : list (formula L)} φ n m, var_not_free_in_context m A Γ → 
     Prf Γ (replace_formula_with n (term.var m) φ) → Prf Γ (formula.all n φ)
-| All_elim : ∀ {Γ : ℕ → (formula L)} n t φ ψ, Prf Γ (formula.all n φ) → 
+| All_elim : ∀ {Γ : list (formula L)} n t φ ψ, Prf Γ (formula.all n φ) → 
     substitutable_for t n φ → Prf ((replace_formula_with n t φ) :: Γ) ψ → Prf Γ ψ
-| Cut : ∀ {Γ : ℕ → (formula L)} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
+| Cut : ∀ {Γ : list (formula L)} φ ψ, Prf Γ φ → Prf (φ::Γ) ψ → Prf Γ ψ
 
 open Prf
 
-@[simp]
-def list_to_func (Γ : list (formula L)) : ℕ → (formula L) :=
-λ n, match Γ.nth n with
-    | none       := T
-    | some a     := a
-    end
+parameter A : Type
 
-@[simp]
-def Prf_list (Γ : list (formula L)) (φ : formula L) : Prop := 
-  Prf (list_to_func Γ) φ
+variable [has_coe A (formula L)]
 
 /- Using ⊢ doesn't compile -/
-infix ` ▸ ` := Prf
+local notation Γ` ▸ `φ := Prf A Γ φ
 
-infix ` ▸ ` := Prf_list
+-- local notation φ` ▸ `ψ := Prf A (φ::[]) ψ
 
-notation φ` ▸ `ψ := Prf (λ n, φ) ψ
+local notation ` ▸ `φ := Prf A list.nil φ
 
 variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
-variables {Γ γ : ℕ → formula L} {P Q : list (formula L)}
+variables {Γ γ : list (formula L)} {P Q : list (formula L)}
 
 -- If a set of axioms is consistent
-def is_consistent (Γ : ℕ → formula L) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
+def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
 
 -- If a set of axiom is complete
-def is_complete (Γ : ℕ → formula L) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
+def is_complete (Γ : list (formula L)) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
 
 -- Weakening
-lemma nth_append_some : ∀ {A : Type} {l1 l2 : ℕ → A} n, (l1 n) = (l1 ++ l2) (2 * n) := begin
-  intros, simp,
-  have two_even : even 2 := even_bit0 1,
-  have two_n_even : even (2 * n) := nat.even.mul_left two_even n,
-  simp [two_n_even],
-end
+lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
+| A (y :: l1) l2 0 x h := h
+| A (y :: l1) l2 (n+1) x h := @nth_append_some A l1 l2 n x h
 
-lemma nth_cons_some : ∀ {A : Type} {l1 l2 : ℕ → A},
-  (∀ n x, l1 n = x → ∃ m, l2 m = x) -> ∀ y,
-  (∀ n x, (y :: l1) n = x → ∃ m, (y :: l2) m = x) :=
+lemma nth_cons_some : ∀ {A : Type} {l1 l2 : list A},
+  (∀ n x, l1.nth n = some x → ∃ m, l2.nth m = some x) -> ∀ y,
+  (∀ n x, (y :: l1).nth n = some x → ∃ m, (y :: l2).nth m = some x) :=
   begin
-    intros, cases n, existsi 0, simp at *, assumption,
-    simp at ᾰ, apply exists.elim (ᾰ n),
-    intros m h, existsi m.succ, rw ← ᾰ_1, simp, assumption,
+    intros, cases n, { existsi 0, assumption },
+    { simp at *, cases (ᾰ _ _ ᾰ_1),
+        existsi w.succ, assumption },
   end
 
-lemma nth_cons_r : ∀ {A : Type} {a : A} {l : ℕ → A} n,
-  (a::l) (n + 1) = l n := by { intros, simp, }
 
-lemma nth_even_append_r : ∀ {A : Type} {l1 l2 : ℕ → A} n, 
-  (even n) → (l1 ++ l2) n = l1 (n / 2) := by { intros, simp, intro, contradiction, }
 
-lemma nth_odd_append_r : ∀ {A : Type} {l1 l2 : ℕ → A} n,
-  ¬(even n) → (l1 ++ l2) n = l2 ((n - 1) / 2) := by { intros, simp, intro, contradiction, }
+lemma nth_append_r : ∀ {A : Type} {l1 l2 : list A} n, (l1 ++ l2).nth (n + l1.length) = l2.nth n := begin
+  intros A l1 l2 n,
+  induction l1,
+  simp,
+  simp,
+  rw ← add_assoc,
+  rw ← add_comm,
+  rw nat.one_add,
+  simp,
+  apply l1_ih,
+end
 
-def weakening : (forall n x, γ n = x -> ∃ m, Γ m = x) → γ ▸ p → Γ ▸ p := begin
+def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
+  γ ▸ p → Γ ▸ p := begin
     intros h γp, revert Γ h,
     induction γp, all_goals { intros Γ h },
-      { cases (h _ _ γp_ᾰ), apply Axiom, assumption, },
+      sorry,
+      { cases (h _ _ γp_ᾰ), apply Assumption, assumption, },
       apply Bot_elim, apply γp_ih, assumption,
       apply Not_elim,
         { apply γp_ih_ᾰ, assumption },
@@ -116,17 +114,16 @@ def R_ : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
     existsi 0, simp, assumption,
   end
 
-variables (h : formula L) (l : ℕ → formula L)
+variables (h : formula L) (l : list (formula L))
 
-def To_Right_Rule_List (l : list (formula L)) : ((h::l) ▸ q) → ∀ Γ : list (formula L), Γ ▸ h → ((l ++ Γ) ▸ q) := begin
-    intros hlq Γ Γq,
+def To_Right_Rule_List : ((h::l) ▸ q) → (∀ Γ : (list (formula L)), Γ ▸ h → (l ++ Γ) ▸ q) := begin
+    intros h1 Γ h2,
     apply Cut,
-    apply weakening _ hlq,
-    intros n x hln_eq_x,
-    existsi (2 * (n - 1)),
-    rw nth_even_append_r, simp,
-    rw ← hln_eq_x,
-    apply nth_cons_r,
+    apply weakening _ h2,
+    intros n1 h3 h4,
+    existsi (n1 + l.length),
+    rw nth_append_r,
+    apply h4,
     apply weakening,
     intros n2 h5 h6,
     apply nth_cons_some,

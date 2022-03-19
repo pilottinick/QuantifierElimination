@@ -30,13 +30,21 @@ def nth_succ (t : term NT_succ) : ℕ → term NT_succ
 | (nat.succ n) := succ (nth_succ n)
 
 /- The axioms of number theory with successor -/
-@[simp]
-def NT_succ_Γ : ℕ → (formula NT_succ) :=
-λ n, match n with
-    | 0    := formula.all 0 ∼((succ v₀) ≃ zero)
-    | 1    := formula.all 0 (formula.all 1 ((((succ v₀) ≃ (succ v₁)) ⇒ (v₀ ≃ v₁))))
-    | n    := formula.all 0 ∼((nth_succ v₀ (n - 1)) ≃ v₀)
-    end
+inductive NT_succ_Γ
+| eq1 : NT_succ_Γ
+| eq2 : NT_succ_Γ
+| ax1 : NT_succ_Γ
+| ax2 : NT_succ_Γ
+| ax3 : ℕ → NT_succ_Γ
+
+open NT_succ_Γ
+
+def NT_succ_Γ_to_formula : NT_succ_Γ → formula (NT_succ)
+| eq1     := formula.all 0 (v₀ ≃ v₀)
+| eq2     := formula.all 0 (formula.all 1 (v₀ ≃ v₁ ⇒ (succ v₀) ≃ (succ v₁)))
+| ax1     := formula.all 0 ∼((succ v₀) ≃ zero)
+| ax2     := formula.all 0 (formula.all 1 ((((succ v₀) ≃ (succ v₁)) ⇒ (v₀ ≃ v₁))))
+| (ax3 n) := formula.all 0 ∼(nth_succ v₀ n ≃ v₀)
 
 variables { φ : formula NT_succ } { t : term NT_succ }
 
