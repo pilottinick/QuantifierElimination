@@ -4,13 +4,14 @@ namespace first_order
 
 section quantifier_elimination
 
-variables {L : language} (Γ : ℕ → (formula L)) {φ φ₁ φ₂ ψ : formula L} {p q : formula L}
+variables {L : language} (A : Type) (Γ : list (formula L)) {φ φ₁ φ₂ ψ : formula L} {p q : formula L}
+variable [has_coe A (formula L)]
 
 /- If a formula φ has has quantifier elimination in a theory -/
 @[simp]
-def equiv_qf (φ : formula L) := ∃ ψ : qf L, Γ ▸ φ ↔ Γ ▸ ψ
+def equiv_qf (φ : formula L) := ∃ ψ : qf L, (A∣list.nil ⊢ φ) ↔ (A∣list.nil ⊢ (ψ : formula L))
 
-def Eq_equiv_qf {Γ : ℕ → (formula L)} : (Γ ▸ p ↔ Γ ▸ q) → (equiv_qf Γ p → equiv_qf Γ q) := begin
+def Eq_equiv_qf {Γ : list (formula L)} : ((A∣Γ ⊢ p) ↔ (A∣Γ ⊢ q)) → (equiv_qf A p → equiv_qf A q) := begin
    intros h₁ h₂,
    rcases h₂ with ⟨φ₃, h₃⟩,
    existsi φ₃,
@@ -23,34 +24,34 @@ end
 
 /- If a theory Γ has quantifier elimination -/
 @[simp]
-def qe := ∀ (φ : formula L), equiv_qf Γ φ
+def qe := ∀ (φ : formula L), equiv_qf A φ
 
 /- If a theory Γ has quantifier elimination on conjunctions of literals with
    with a single existential quantifier -/
-def qe_ecl1 := ∀ (φ : ecl1 L), equiv_qf Γ φ
+def qe_ecl1 := ∀ (φ : ecl1 L), equiv_qf A (φ : formula L)
 
 /- If a theory Γ has quantifier elimination on disjunctions of conjunctions
    of literals with a single existential quantifier -/
-def qe_edcl1 := ∀ (φ : edcl1 L), equiv_qf Γ φ
+def qe_edcl1 := ∀ (φ : edcl1 L), equiv_qf A (φ : formula L)
 
 /- If a theory Γ has quantifier elimination on disjunctions of conjugations 
    of literals with a single quantifier -/
 @[simp]
-def qe_qdcl1 := ∀ (φ : qdcl1 L), equiv_qf Γ φ
+def qe_qdcl1 := ∀ (φ : qdcl1 L), equiv_qf A (φ : formula L)
 
 @[simp]
-def qe_dnf := ∀ (φ : dnf L), equiv_qf Γ φ
+def qe_dnf := ∀ (φ : dnf L), equiv_qf A (φ : formula L)
 
 /- If a theory Γ has quantifier elimination on quantifier free formulas -/
 @[simp]
-def qe_qf := ∀ (φ : qf L), equiv_qf Γ φ
+def qe_qf := ∀ (φ : qf L), equiv_qf A (φ : formula L)
 
 /- All theories have quantifier elimination on quantifier free formulas -/
-def for_all_qe_qf : qe_qf Γ := by { intros φ, existsi φ, refl }
+def for_all_qe_qf : @qe_qf L A _ := by { intros φ, existsi φ, refl }
 
 /- If a theory has quantifier elimination on φ₁ φ₂ then it has quantifier 
    elimination on (φ₁ or φ₂) -/
-lemma equiv_qf_or_equiv_qf : equiv_qf Γ φ₁ → equiv_qf Γ φ₂ → equiv_qf Γ (φ₁ or φ₂) := begin
+lemma equiv_qf_or_equiv_qf : equiv_qf A φ₁ → equiv_qf A φ₂ → equiv_qf A (φ₁ or φ₂) := begin
    intros h_φ₁ h_φ₂,
    rcases h_φ₁ with ⟨φ₁', h₁⟩,
    rcases h_φ₂ with ⟨φ₂', h₂⟩,
@@ -58,7 +59,7 @@ lemma equiv_qf_or_equiv_qf : equiv_qf Γ φ₁ → equiv_qf Γ φ₂ → equiv_q
    existsi (qf.o φ₁' φ₂'), refl,
 end
 
-lemma qe_ecl1_qe_edcl1 : (qe_ecl1 Γ) → (qe_edcl1 Γ) := begin
+lemma qe_ecl1_qe_edcl1 : (@qe_ecl1 L A _) → (@qe_edcl1 L A _) := begin
    intros h₁ φ,
    cases φ,
    {  existsi (φ : qf L), refl, },
@@ -74,7 +75,7 @@ lemma qe_ecl1_qe_edcl1 : (qe_ecl1 Γ) → (qe_edcl1 Γ) := begin
    },
 end
 
-lemma qe_edcl1_qe_qdcl1 : (qe_edcl1 Γ) → (qe_qdcl1 Γ) := begin
+lemma qe_edcl1_qe_qdcl1 : (@qe_edcl1 L A _) → (@qe_qdcl1 L A _) := begin
    intros h₁ φ,
    induction φ,
    {  existsi (φ : qf L), refl, },

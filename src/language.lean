@@ -291,11 +291,15 @@ def nth_not_free {L : language} (x : ℕ) (n : ℕ) (Γ : list (formula L)) : Pr
      | some φ := ¬(free n φ)
      end
 
-/- The variable x is not free in axioms A and the context Γ -/
+/- The variable x is not free in axioms A -/
 @[simp]
-def var_not_free_in_context {L : language} (x : ℕ)  (α : Type) (Γ : list (formula L)) 
-  [has_coe α (formula L)] : Prop := 
-  (∀ a : α, ¬(free x ↑a)) ∧ (∀ n : ℕ, (nth_not_free x n Γ))
+def var_not_free_in_axioms {L : language} (α : Type) [has_coe α (formula L)] (x : ℕ) : Prop := 
+  (∀ a : α, ¬(@free L x a))
+
+/- The variable x is not free in the context Γ -/
+@[simp]
+def var_not_free_in_context {L : language} (x : ℕ) (Γ : list (formula L)) : Prop := 
+  (∀ n : ℕ, (nth_not_free x n Γ))
 
 /-- Replace the variable vₓ with the term t -/
 @[simp]

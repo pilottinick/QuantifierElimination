@@ -46,18 +46,21 @@ def NT_succ_Γ_to_formula : NT_succ_Γ → formula (NT_succ)
 | ax2     := formula.all 0 (formula.all 1 ((((succ v₀) ≃ (succ v₁)) ⇒ (v₀ ≃ v₁))))
 | (ax3 n) := formula.all 0 ∼(nth_succ v₀ n ≃ v₀)
 
+instance NT_succ_Γ_to_formula_NT_succ : has_coe NT_succ_Γ (formula NT_succ) := sorry
+
 variables { φ : formula NT_succ } { t : term NT_succ }
 
-lemma var_not_free_in_NT_succ_Γ : ∀ x : ℕ, var_not_free_in_axioms x NT_succ_Γ := sorry
+lemma var_not_free_in_NT_succ_Γ : ∀ x : ℕ, @var_not_free_in_axioms NT_succ NT_succ_Γ _ x := sorry
 
-lemma NT_succ_qe_ecl1 : qe_ecl1 NT_succ_Γ := begin
+lemma NT_succ_qe_ecl1 : @qe_ecl1 NT_succ NT_succ_Γ _ := begin
   intro φ,
   induction φ,
-  { existsi (φ : qf NT_succ), refl },
+  { existsi (φ : qf NT_succ), sorry, },
   { cases φ_ᾰ_1, cases φ_ᾰ_1, cases φ_ᾰ_1,
     { have h_free : ¬(@free NT_succ φ_ᾰ F) := by { intro, assumption, },
-      apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
-      existsi qf.f, refl,
+      sorry,
+      --apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
+      --existsi qf.f, refl,
     },
     { have h_free₁ : 
       (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) := 
@@ -66,7 +69,16 @@ lemma NT_succ_qe_ecl1 : qe_ecl1 NT_succ_Γ := begin
         by apply em,
       apply or.elim h_free₁,
       all_goals { apply or.elim h_free₂ },
-      repeat { sorry },
+      { intros h₁ h₂,
+        sorry,
+      },
+      { intros h₁ h₂,
+        sorry,
+      },    
+      sorry,
+      { intros h₁ h₂,
+        sorry,
+      }
     },
     { cases φ_ᾰ_1_ᾰ, },
     cases φ_ᾰ_1,

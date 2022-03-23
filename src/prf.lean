@@ -16,7 +16,7 @@ inductive Prf (A : Type) [has_coe A (formula L)] : list (formula L) → formula 
 | Or_intro_left : ∀ {Γ : list (formula L)} φ ψ, Prf Γ φ → Prf Γ (φ or ψ)
 | Or_intro_right : ∀ {Γ : list (formula L)} φ ψ, Prf Γ ψ → Prf Γ (φ or ψ)
 | Or_elim : ∀ {Γ : list (formula L)} φ ψ χ, Prf Γ (φ or ψ) → Prf (φ::Γ) χ → Prf (ψ::Γ) χ → Prf Γ χ
-| All_intro : ∀ {Γ : list (formula L)} φ n m, var_not_free_in_context m A Γ → 
+| All_intro : ∀ {Γ : list (formula L)} φ n m, @var_not_free_in_axioms L A _ m ∧ var_not_free_in_context m Γ → 
     Prf Γ (replace_formula_with n (term.var m) φ) → Prf Γ (formula.all n φ)
 | All_elim : ∀ {Γ : list (formula L)} n t φ ψ, Prf Γ (formula.all n φ) → 
     substitutable_for t n φ → Prf ((replace_formula_with n t φ) :: Γ) ψ → Prf Γ ψ
@@ -24,26 +24,21 @@ inductive Prf (A : Type) [has_coe A (formula L)] : list (formula L) → formula 
 
 open Prf
 
-parameter A : Type
+notation A ` ∣ ` Γ` ⊢ `φ := Prf A Γ φ
 
-variable [has_coe A (formula L)]
+notation A` ⊢ `φ := Prf A list.nil φ
 
-/- Using ⊢ doesn't compile -/
-local notation Γ` ▸ `φ := Prf A Γ φ
-
--- local notation φ` ▸ `ψ := Prf A (φ::[]) ψ
-
-local notation ` ▸ `φ := Prf A list.nil φ
+notation A ` | `φ` ⊢ `ψ := Prf A (φ::[]) ψ
 
 variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
-variables {Γ γ : list (formula L)} {P Q : list (formula L)}
+variables {Γ γ : list (formula L)} {P Q : list (formula L)} (A : Type) [has_coe A (formula L)]
 
 -- If a set of axioms is consistent
-def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬(Γ ▸ φ ∧ Γ ▸ ∼φ)
+def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬((A∣Γ ⊢ φ) ∧ (A∣Γ ⊢ ∼φ))
 
 -- If a set of axiom is complete
-def is_complete (Γ : list (formula L)) := ∀ φ : formula L, Γ ▸ φ ∨ Γ ▸ ∼φ
+def is_complete (Γ : list (formula L)) := ∀ φ : formula L, (A∣Γ ⊢ φ) ∨ (A∣Γ ⊢ ∼φ)
 
 -- Weakening
 lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
@@ -74,7 +69,7 @@ lemma nth_append_r : ∀ {A : Type} {l1 l2 : list A} n, (l1 ++ l2).nth (n + l1.l
 end
 
 def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
-  γ ▸ p → Γ ▸ p := begin
+  (A∣γ ⊢ p) → (A∣Γ ⊢ p) := begin
     intros h γp, revert Γ h,
     induction γp, all_goals { intros Γ h },
       sorry,
@@ -97,15 +92,14 @@ def weakening : (forall n x, γ.nth n = some x -> ∃ m, Γ.nth m = some x) →
         { apply γp_ih_ᾰ_1, apply nth_cons_some, assumption },
   end
 
-def weakening_append : (γ ▸ p) → ((γ ++ Γ) ▸ p) := begin
+def weakening_append : (A∣γ ⊢ p) → (A∣(γ ++ Γ) ⊢ p) := begin
     apply weakening,
-    intros, existsi 2 * n,
-    have nth_append : γ n = (γ++Γ) (2 * n) := by apply nth_append_some,
-    rw ← nth_append, assumption,
+    intros, existsi n,
+    apply nth_append_some, assumption,
   end
 
 -- Converting natural deduction rules into sequent calculus rules
-def R_ : (p ▸ q) → (Γ ▸ p → Γ ▸ q) := begin
+def R_ : (A∣p ⊢ q) → (Γ ▸ p → Γ ▸ q) := begin
     intros pq Γp,
     apply Cut,
     apply Γp,
