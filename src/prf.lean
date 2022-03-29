@@ -26,8 +26,6 @@ open Prf
 
 notation A ` ∣ ` Γ` ⊢ `φ := Prf A Γ φ
 
-notation A` ⊢ `φ := Prf A list.nil φ
-
 variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
 variables {Γ γ : list (formula L)} {P Q : list (formula L)} {A : Type} [has_coe A (formula L)]
@@ -566,11 +564,14 @@ def Contrapose : A∣[(p ⇒ q)] ⊢ (∼q ⇒ ∼p) := begin
   apply Assumption 1, refl,
 end
 
-def Ex_intro (n : ℕ) (t : term L) (φ : formula L) : 
-  substitutable_for t n φ → (A∣Γ ⊢ (replace_formula_with n t φ)) → (A∣Γ ⊢ (exi n φ)) := sorry
+def Ex_intro (n m : ℕ) (t : term L) (φ : formula L) : var_not_free_in_axioms_context m A Γ →
+    (A∣Γ ⊢ (replace_formula_with m t φ)) → (A∣Γ ⊢ (exi n φ)) := sorry
 
-def Ex_elim (n : ℕ) (t : term L) (φ : formula L) (ψ : formula L) : 
-  var_not_free_in_axioms_context m A Γ → (A∣Γ ⊢ (exi n φ)) → (A∣(replace_formula_with n (term.var m) φ)::Γ ⊢ ψ) → (A∣Γ ⊢ ψ) := sorry
+-- | All_intro : ∀ {Γ : list (formula L)} φ n m, var_not_free_in_axioms_context m A Γ → 
+--     Prf Γ (replace_formula_with n (term.var m) φ) → Prf Γ (formula.all n φ)
+
+def Ex_elim (n : ℕ) (t : term L) (φ : formula L) (ψ : formula L) : substitutable_for t n φ → 
+    (A∣Γ ⊢ (exi n φ)) → (A∣(replace_formula_with n t φ)::Γ ⊢ ψ) → (A∣Γ ⊢ ψ) := sorry
 
 def All_To_Ex : A∣[(all n p)] ⊢ ∼(exi n ∼p) := begin
   apply R_ Double_negation_intro,
@@ -622,7 +623,7 @@ def RemoveAll : (A∣Γ ⊢ (all n p)) → (A∣Γ ⊢ p) := sorry
 
 def AddEx : (A∣Γ ⊢ p) → (A∣Γ ⊢ (exi n p)) := sorry
 
-def RemoveEx : ¬(free n p) → (A∣Γ ⊢ (exi n p)) → (A∣Γ ⊢ p) := sorry
+def RemoveEx : ¬(free n p) → ((A∣Γ ⊢ (exi n p)) → (A∣Γ ⊢ p)) := sorry
 
 def AllOrOut : (@var_not_free_in_axioms L n A _) → A∣[((all n p) or (all n q))] ⊢ (all n (p or q)) := begin
   intro h,

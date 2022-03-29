@@ -50,34 +50,56 @@ instance NT_succ_Γ_to_formula_NT_succ : has_coe NT_succ_Γ (formula NT_succ) :=
 
 variables { φ : formula NT_succ } { t : term NT_succ }
 
-lemma var_not_free_in_NT_succ_Γ : ∀ x : ℕ, @var_not_free_in_axioms NT_succ NT_succ_Γ _ x := sorry
+lemma var_not_free_in_NT_succ_Γ : ∀ x : ℕ, @var_not_free_in_axioms NT_succ x NT_succ_Γ _ := sorry
 
 lemma NT_succ_qe_ecl1 : @qe_ecl1 NT_succ NT_succ_Γ _ := begin
   intro φ,
   induction φ,
-  { existsi (φ : qf NT_succ), sorry, },
+  { existsi (φ : qf NT_succ), refl, },
   { cases φ_ᾰ_1, cases φ_ᾰ_1, cases φ_ᾰ_1,
     { have h_free : ¬(@free NT_succ φ_ᾰ F) := by { intro, assumption, },
-      sorry,
-      --apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
-      --existsi qf.f, refl,
+      apply Eq_equiv_qf ⟨AddEx, RemoveEx h_free⟩,
+      existsi qf.f, refl,
     },
-    { have h_free₁ : 
-      (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ) := 
-        by apply em,
-      have h_free₂ : (occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) ∨ ¬(occurs_in_term φ_ᾰ φ_ᾰ_1_ᾰ_1) := 
-        by apply em,
+    { rename φ_ᾰ n, rename φ_ᾰ_1_ᾰ t₁, rename φ_ᾰ_1_ᾰ_1 t₂,
+      have h_free₁ : 
+      (occurs_in_term n t₁) ∨ ¬(occurs_in_term n t₁) := by apply em,
+      have h_free₂ : (occurs_in_term n t₂) ∨ ¬(occurs_in_term n t₂) := by apply em,
       apply or.elim h_free₁,
       all_goals { apply or.elim h_free₂ },
-      { intros h₁ h₂,
+      { intros h₂ h₁,
         sorry,
       },
-      { intros h₁ h₂,
+      { intros h₂ h₁,
         sorry,
-      },    
-      sorry,
-      { intros h₁ h₂,
+      },
+      { intros h₂ h₁,
+        cases t₂,
+        simp at h₂,
+        rw ← h₂,
+        existsi (qf.e t₁ t₁),
+        split,
+        intro h₃,
+        apply Ex_elim n t₁,
         sorry,
+        apply h₃,
+        apply Prf.Assumption 0,
+        -- For some reason I need to rw like this in order to simplify
+        have h₄ : replace_formula_with n t₁ (t₁ ≃ (v n)) =  replace_formula_with n t₁ (qf_to_formula NT_succ (dcl_to_qf NT_succ ↑(cl.l (lit.a (atom.e t₁ (v n)))))) := begin
+          refl,
+        end,
+        simp,
+        rw ← h₄,
+        simp,
+        cases t₁,
+        simp at h₁,
+        simp, refl,
+        
+      },
+      { intros h₂ h₁,
+        have free : ¬(free n (t₁ ≃ t₂)) := by { simp, exact not_or h₁ h₂, },
+        apply Eq_equiv_qf ⟨AddEx, RemoveEx free⟩,
+        existsi (qf.e t₁ t₂), refl,
       }
     },
     { cases φ_ᾰ_1_ᾰ, },
@@ -101,8 +123,7 @@ lemma NT_succ_qe_ecl1 : @qe_ecl1 NT_succ NT_succ_Γ _ := begin
 end
 
 /- NT_succ has quantifier elimination -/
-theorem NT_succ_qe : qe NT_succ_Γ := 
-  by { apply qe_ecl1_qe, apply NT_succ_qe_ecl1 }
+theorem NT_succ_qe : @qe NT_succ NT_succ_Γ _ := sorry
 
 end NT_succ
 
