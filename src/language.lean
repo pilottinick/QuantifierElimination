@@ -36,7 +36,7 @@ def const (L : language) := L.functions 0
 
 variable (L : language)
 
-/-- Def 1.3.1. A term of a language-/
+/-- A term of a language-/
 inductive term
 | var           : ℕ → term
 | func {n : ℕ}  : L.functions n → (fin n → term) → term
@@ -322,7 +322,7 @@ def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → f
 | (φ₁ or φ₂)          := (replace_formula_with φ₁) or (replace_formula_with φ₂)
 | (all y φ)           := if x = y then (all y φ) else (all y (replace_formula_with φ))
 
-/- Replacing a variable vₓ with vₓ does not change the formula -/
+/- Replacing the variable vₓ with vₓ does not change the formula -/
 lemma replace_formula_with_idem : ∀ x φ, @replace_formula_with L x (v x) φ = φ := sorry
 
 /-- The term t is substitutable for the variable vₓ -/
