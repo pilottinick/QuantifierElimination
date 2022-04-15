@@ -312,6 +312,10 @@ def replace_term_with {L : language} (x : ℕ) (t : term L) : term L → term L
 | (v n)              := if (n = x) then t else (v n)
 | (func fsymb args)  := (func fsymb (λ n, replace_term_with (args n)))
 
+/-- If vₓ does not occur in the term t, then replacing vₓ in t does nothing -/
+def replace_term_with_does_not_occur (x : ℕ) (t' : term L) (t : term L) : 
+  ¬(occurs_in_term x t) → replace_term_with x t' t = t := sorry
+
 /-- Replace the variable vₓ with the term t -/
 @[simp]
 def replace_formula_with {L : language} (x : ℕ) (t : term L) : formula L → formula L

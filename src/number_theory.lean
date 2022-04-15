@@ -78,16 +78,32 @@ def ex_t₁_eq_t₂_to_qf (n : ℕ) : term NT_succ → term NT_succ → qf NT_su
 -- succ x ≃ succ y
 | (term.func NT_succ_func.succ t₁) (term.func NT_succ_func.succ t₂) := ex_t₁_eq_t₂_to_qf (t₁ 0) (t₂ 0)
 
-lemma qe_ex_n_n_eq_t₂ (n : ℕ) (t₂ : term NT_succ) : (NT_succ_Γ ∣ [] ⊢ (exi n ((v n) ≃ t₂))) ↔ 
-  (@Prf NT_succ NT_succ_Γ _ list.nil T) := begin
-  split, intro h,
-  sorry, sorry,
+lemma rw_ite_nP {α : Type*} (a b : α) (P : Prop) [decidable P]: ¬P → ite P a b = b := sorry
+
+lemma reflexive (Γ : list (formula NT_succ)) : ∀ t : term NT_succ, NT_succ_Γ ∣ Γ ⊢ t ≃ t := sorry
+
+lemma qe_ex_n_n_eq_t₂ (n : ℕ) (t₂ : term NT_succ) : ¬(occurs_in_term n t₂) →
+  ((NT_succ_Γ ∣ [] ⊢ (exi n ((v n) ≃ t₂))) ↔ (@Prf NT_succ NT_succ_Γ _ list.nil T)) := begin
+  intro h1, split,
+  { intro h2, apply Top_intro },
+  { simp, intro h2,
+    apply Ex_intro n t₂ _,
+    simp,
+    rw replace_term_with_does_not_occur _ _ _ _ h1,
+    apply reflexive,
+  }
 end 
 
-lemma qe_ex_n_t₁_eq_n (n : ℕ) (t₁ : term NT_succ) : (NT_succ_Γ ∣ [] ⊢ (exi n (t₁ ≃ (v n)))) ↔ 
-  (@Prf NT_succ NT_succ_Γ _ list.nil T) := begin
-  split, intro h,
-  sorry, sorry,
+lemma qe_ex_n_t₁_eq_n (n : ℕ) (t₁ : term NT_succ) : ¬(occurs_in_term n t₁) →
+  ((NT_succ_Γ ∣ [] ⊢ (exi n (t₁ ≃ (v n)))) ↔ (@Prf NT_succ NT_succ_Γ _ list.nil T)) := begin
+  intro h1, split,
+  { intro h2, apply Top_intro },
+  { simp, intro h2,
+    apply Ex_intro n t₁ _,
+    simp,
+    rw replace_term_with_does_not_occur _ _ _ _ h1,
+    apply reflexive,
+  }
 end 
 
 lemma qe_ex_n_m₁_eq_m₂ (n m₁ m₂ : ℕ) : n ≠ m₁ → n ≠ m₂ → 
@@ -100,23 +116,43 @@ lemma qe_ex_t₁_eq_t₂ (n : ℕ) (t₁ t₂ : term NT_succ) : equiv_qf NT_succ
   existsi (ex_t₁_eq_t₂_to_qf n t₁ t₂),
   cases t₁, cases t₂,
   { have t₁eq : (n = t₁) ∨ (n ≠ t₁) := by apply em,
-    cases t₁eq,
-    { rw ← t₁eq, simp,
-      apply qe_ex_n_n_eq_t₂
-    },
     have t₂eq : (n = t₂) ∨ (n ≠ t₂) := by apply em,
-    cases t₂eq,
-    { rw t₂eq, simp,
-      apply qe_ex_n_t₁_eq_n,
+    cases t₁eq,
+    all_goals { cases t₂eq },
+    { rw ← t₁eq, rw ← t₂eq,
+      split,
+      intro h1, simp, apply Top_intro,
+      intro h1, simp, apply Ex_intro n (v 0) _, simp, apply reflexive,
     },
-    { -- TODO: How to simplify?
-      -- apply (qe_ex_n_m₁_eq_m₂ _ _ _ t₁eq t₂eq),
-      sorry
-    }
+    { rw ← t₁eq, simp,
+      apply qe_ex_n_n_eq_t₂,
+      simp, assumption,
+    },
+    { rw ← t₂eq, simp,
+      apply qe_ex_n_t₁_eq_n,
+      simp, assumption,
+    },
+    { have h : (v t₁ ≃ v t₂) = ((ex_t₁_eq_t₂_to_qf n (v t₁) (v t₂)) : formula NT_succ) := begin
+        simp,
+        repeat { rw rw_ite_nP _ _ _ },
+        refl,
+        repeat { assumption },
+      end,
+      rw ← h,
+      apply (qe_ex_n_m₁_eq_m₂ _ _ _ t₁eq t₂eq),
+    },
   },
   { cases t₂_n, cases t₂_ᾰ,
     { simp,
-      sorry
+      have t₁eq : (t₁ = n) ∨ (t₁ ≠ n) := by apply em,
+      apply or.elim t₁eq,
+      intro t₁eqn, rw t₁eqn, simp,
+      split,
+      { intro h1, apply Top_intro },
+      { intro h1,
+        apply Ex_intro n (term.func NT_succ_func.zero ![]), 
+
+      }
     },
     cases t₂_ᾰ,
     { simp,

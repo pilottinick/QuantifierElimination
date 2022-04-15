@@ -19,7 +19,7 @@ def equiv_dcl (φ : formula L) : Prop := ∃ ψ : dcl L, (A∣[] ⊢ φ) ↔ (A�
 
 def equiv_dnf (φ : formula L) : Prop := ∃ ψ : dnf L, (A∣[] ⊢ φ) ↔ (A∣[] ⊢ (ψ : formula L))
 
-def Eq_equiv_dcl : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dcl A p → equiv_dcl A q) := begin
+lemma Eq_equiv_dcl : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dcl A p → equiv_dcl A q) := begin
    intros h₁ h₂,
    rcases h₂ with ⟨φ₃, h₃⟩,
    existsi φ₃,
@@ -30,7 +30,7 @@ def Eq_equiv_dcl : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dcl A p → eq
    apply h₁.mp (h₃.mpr h₄),
 end
 
-def Eq_equiv_dnf : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dnf A p → equiv_dnf A q) := begin
+lemma Eq_equiv_dnf : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dnf A p → equiv_dnf A q) := begin
    intros h₁ h₂,
    rcases h₂ with ⟨φ₃, h₃⟩,
    existsi φ₃,
@@ -42,7 +42,7 @@ def Eq_equiv_dnf : ((A∣[] ⊢ p) ↔ (A∣[] ⊢ q)) → (equiv_dnf A p → eq
 end
 
 /- The negation of a literal (as a literal) is equivalent to the negation of the literal (as a formula) -/
-def neg_lit_equiv_lit : ∀ φ : lit L, (A∣Γ ⊢ ∼↑φ) ↔ (A∣Γ ⊢ neg_lit _ φ) := begin
+lemma neg_lit_equiv_lit : ∀ φ : lit L, (A∣Γ ⊢ ∼↑φ) ↔ (A∣Γ ⊢ neg_lit _ φ) := begin
   intro φ,
   cases φ,
   refl,
@@ -56,7 +56,7 @@ def neg_lit_equiv_lit : ∀ φ : lit L, (A∣Γ ⊢ ∼↑φ) ↔ (A∣Γ ⊢ ne
   assumption,
 end
 
-def dcl_and_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl A ((φ₁ : formula L) and φ₂) := begin
+lemma dcl_and_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl A ((φ₁ : formula L) and φ₂) := begin
   intros φ₁ φ₂,
   induction φ₁, induction φ₂,
   { existsi (cl.c φ₁ φ₂ : dcl L), refl },
@@ -72,7 +72,7 @@ def dcl_and_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl A ((φ₁ : formula L
   }
 end
 
-def dcl_not_equiv_dcl : ∀ φ : dcl L, equiv_dcl A (∼φ : formula L) := begin
+lemma dcl_not_equiv_dcl : ∀ φ : dcl L, equiv_dcl A (∼φ : formula L) := begin
   intro φ,
   induction φ, induction φ,
   { existsi (neg_lit L φ : dcl L), apply neg_lit_equiv_lit },
@@ -93,12 +93,12 @@ def dcl_not_equiv_dcl : ∀ φ : dcl L, equiv_dcl A (∼φ : formula L) := begin
   }
 end
 
-def dcl_or_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl A ((φ₁ : formula L) or φ₂) := begin
+lemma dcl_or_equiv_dcl : ∀ φ₁ φ₂ : dcl L, equiv_dcl A ((φ₁ : formula L) or φ₂) := begin
   intros φ₁ φ₂,
   { existsi (dcl.d φ₁ φ₂ : dcl L), refl },
 end
 
-def qf_equiv_dcl : ∀ φ : qf L, equiv_dcl A (φ : formula L) := begin
+lemma qf_equiv_dcl : ∀ φ : qf L, equiv_dcl A (φ : formula L) := begin
   intro φ,
   induction φ,
   { existsi (@atom.f L : dcl L), refl, },
@@ -112,14 +112,14 @@ def qf_equiv_dcl : ∀ φ : qf L, equiv_dcl A (φ : formula L) := begin
     apply dcl_or_equiv_dcl },
 end
 
-def equiv_dcl_equiv_dnf : ∀ φ : formula L, equiv_dcl A φ →  equiv_dnf A φ := begin
+lemma equiv_dcl_equiv_dnf : ∀ φ : formula L, equiv_dcl A φ →  equiv_dnf A φ := begin
   intros φ₁ h₁,
   rcases h₁ with ⟨φ₂, h₂⟩,
   existsi (dnf.dcl φ₂),
   apply h₂,
 end
 
-def dnf_not_equiv_dnf : ∀ φ : dnf L, equiv_dnf A ∼(φ : formula L) := begin
+lemma dnf_not_equiv_dnf : ∀ φ : dnf L, equiv_dnf A ∼(φ : formula L) := begin
   intro φ,
   induction φ,
   { apply equiv_dcl_equiv_dnf, apply dcl_not_equiv_dcl },
@@ -135,14 +135,14 @@ def dnf_not_equiv_dnf : ∀ φ : dnf L, equiv_dnf A ∼(φ : formula L) := begin
   }
 end
 
-def dnf_or_equiv_dnf : ∀ φ₁ φ₂ : dnf L, equiv_dnf A ((φ₁ : formula L) or φ₂) := begin
+lemma dnf_or_equiv_dnf : ∀ φ₁ φ₂ : dnf L, equiv_dnf A ((φ₁ : formula L) or φ₂) := begin
   intros φ₁ φ₂,
   induction φ₁, induction φ₂,
   { apply equiv_dcl_equiv_dnf, apply dcl_or_equiv_dcl },
   repeat { sorry },
 end
 
-def dnf_all_equiv_dnf : ∀ n : ℕ, ∀ φ : dnf L, equiv_dnf A (formula.all n (φ : formula L)) := begin
+lemma dnf_all_equiv_dnf : ∀ n : ℕ, ∀ φ : dnf L, equiv_dnf A (formula.all n (φ : formula L)) := begin
   intros n φ,
   induction φ,
   { existsi (dnf.al n (dnf.dcl φ)), refl },
@@ -150,7 +150,7 @@ def dnf_all_equiv_dnf : ∀ n : ℕ, ∀ φ : dnf L, equiv_dnf A (formula.all n 
 end
 
 /- All formulas are logical equivalent to a formula in dnf -/
-def for_all_equiv_dnf : ∀ φ : formula L, equiv_dnf A φ := begin
+theorem for_all_equiv_dnf : ∀ φ : formula L, equiv_dnf A φ := begin
   intro φ,
   induction φ,
   { existsi (@atom.f L : dnf L), refl, },

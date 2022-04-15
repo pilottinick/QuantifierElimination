@@ -8,7 +8,7 @@ section prf
 variables {L : language} {n m : ℕ}
 
 inductive Prf (A : Type) [has_coe A (formula L)] : list (formula L) → formula L → Prop
-| Axiom : ∀ {Γ : list (formula L)} a φ, a = φ → Prf Γ φ
+| Axiom : ∀ {Γ : list (formula L)} (a : A) φ, a = φ → Prf Γ φ
 | Assumption : ∀ {Γ : list (formula L)} n φ, Γ.nth n = some φ → Prf Γ φ
 | Bot_elim : ∀ {Γ : list (formula L)} φ, Prf Γ F → Prf Γ φ
 | Not_elim : ∀ {Γ : list (formula L)} φ ψ, Prf Γ ∼φ → Prf Γ φ → Prf Γ ψ
@@ -29,12 +29,6 @@ notation A ` ∣ ` Γ` ⊢ `φ := Prf A Γ φ
 variables {p p₁ p₂ q q₁ q₂ r s φ : formula L}
 
 variables {Γ γ : list (formula L)} {P Q : list (formula L)} {A : Type} [has_coe A (formula L)]
-
--- If a set of Assumptions is consistent
-def is_consistent (Γ : list (formula L)) :=  ∀ φ : formula L, ¬((A∣Γ ⊢ φ) ∧ (A∣Γ ⊢ ∼φ))
-
--- If a set of Assumption is complete
-def is_complete (Γ : list (formula L)) := ∀ φ : formula L, (A∣Γ ⊢ φ) ∨ (A∣Γ ⊢ ∼φ)
 
 -- Weakening
 lemma nth_append_some : ∀ {A : Type} {l1 l2 : list A} n x, l1.nth n = some x → (l1 ++ l2).nth n = some x
@@ -239,7 +233,7 @@ def Double_negation_intro : A∣[p] ⊢ ∼∼p := begin
     apply Assumption 1, refl,
   end
 
-def Top_intro : A∣[p] ⊢ T := begin
+def Top_intro : A∣Γ ⊢ T := begin
   apply By_contradiction,
   apply R_ Double_negation_elim,
   apply Assumption 0, refl,
@@ -564,8 +558,8 @@ def Contrapose : A∣[(p ⇒ q)] ⊢ (∼q ⇒ ∼p) := begin
   apply Assumption 1, refl,
 end
 
-def Ex_intro (n m : ℕ) (t : term L) (φ : formula L) : var_not_free_in_axioms_context m A Γ →
-    (A∣Γ ⊢ (replace_formula_with m t φ)) → (A∣Γ ⊢ (exi n φ)) := sorry
+def Ex_intro (n : ℕ) (t : term L) (φ : formula L) :
+    (A∣Γ ⊢ (replace_formula_with n t φ)) → (A∣Γ ⊢ (exi n φ)) := sorry
 
 -- | All_intro : ∀ {Γ : list (formula L)} φ n m, var_not_free_in_axioms_context m A Γ → 
 --     Prf Γ (replace_formula_with n (term.var m) φ) → Prf Γ (formula.all n φ)
