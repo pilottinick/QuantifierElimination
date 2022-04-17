@@ -253,6 +253,8 @@ def occurs_in_term {L : language} (n : ℕ) : term L → Prop
 | (v m)        := n = m
 | (func _ t)   := ∃ i, occurs_in_term (t i)
 
+instance occurs_in_term_dec (n : ℕ) (t : term L) : decidable (occurs_in_term n t) := sorry
+
 /- The variable vₓ is free -/
 @[simp]
 def free {L : language} (x : ℕ) : formula L → Prop

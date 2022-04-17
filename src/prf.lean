@@ -239,6 +239,8 @@ def Top_intro : A∣Γ ⊢ T := begin
   apply Assumption 0, refl,
 end
 
+def Absurd : (A∣Γ ⊢ p) → (A∣Γ ⊢ ∼p) → (A∣Γ ⊢ q) := sorry
+
 def Impl_elim_ : A∣[p, p ⇒ q] ⊢ q := begin
     apply Or_elim,
     apply Assumption 1, refl,
@@ -566,6 +568,8 @@ def Ex_intro (n : ℕ) (t : term L) (φ : formula L) :
 
 def Ex_elim (n : ℕ) (t : term L) (φ : formula L) (ψ : formula L) : substitutable_for t n φ → 
     (A∣Γ ⊢ (exi n φ)) → (A∣(replace_formula_with n t φ)::Γ ⊢ ψ) → (A∣Γ ⊢ ψ) := sorry
+
+def Ex_rename (n m : ℕ) (φ : formula L) : (A∣Γ ⊢ (exi n φ)) → (A∣Γ ⊢ (exi m φ)) := sorry
 
 def All_To_Ex : A∣[(all n p)] ⊢ ∼(exi n ∼p) := begin
   apply R_ Double_negation_intro,
